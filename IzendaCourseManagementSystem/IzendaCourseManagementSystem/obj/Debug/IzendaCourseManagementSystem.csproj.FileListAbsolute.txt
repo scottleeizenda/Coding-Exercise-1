@@ -1,0 +1,6 @@
+c:\users\slee\documents\visual studio 2015\Projects\IzendaCourseManagementSystem\IzendaCourseManagementSystem\bin\Debug\IzendaCourseManagementSystem.exe.config
+c:\users\slee\documents\visual studio 2015\Projects\IzendaCourseManagementSystem\IzendaCourseManagementSystem\obj\Debug\IzendaCourseManagementSystem.csprojResolveAssemblyReference.cache
+c:\users\slee\documents\visual studio 2015\Projects\IzendaCourseManagementSystem\IzendaCourseManagementSystem\bin\Debug\IzendaCourseManagementSystem.exe
+c:\users\slee\documents\visual studio 2015\Projects\IzendaCourseManagementSystem\IzendaCourseManagementSystem\bin\Debug\IzendaCourseManagementSystem.pdb
+c:\users\slee\documents\visual studio 2015\Projects\IzendaCourseManagementSystem\IzendaCourseManagementSystem\obj\Debug\IzendaCourseManagementSystem.exe
+c:\users\slee\documents\visual studio 2015\Projects\IzendaCourseManagementSystem\IzendaCourseManagementSystem\obj\Debug\IzendaCourseManagementSystem.pdb

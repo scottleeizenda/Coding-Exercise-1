@@ -1,0 +1,23 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace IzendaCourseManagementSystem
+{
+    public class CourseGrades
+    {
+        // Declarations & Getters/Setters
+        public int Id { get; set; }
+        public int CourseId { get; set; }
+        public char FinalGrade { get; set; }
+
+        public CourseGrades(int id, int courseId, char finalGrade)
+        {
+            Id = id;
+            CourseId = courseId;
+            FinalGrade = finalGrade;
+        }
+    }
+}
