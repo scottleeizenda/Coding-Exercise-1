@@ -15,6 +15,7 @@ namespace IzendaCourseManagementSystem
         public int CreditHours { get; set; }
         public string CourseName { get; set; }
         public string CourseDescription { get; set; }
+        public List<Student> RegisteredStudents { get; set; }
 
         public Course(int id, DateTime startDate, DateTime endDate, int creditHours, string courseName, string courseDescription)
         {
@@ -24,6 +25,7 @@ namespace IzendaCourseManagementSystem
             CreditHours = creditHours;
             CourseName = courseName;
             CourseDescription = courseDescription;
+            RegisteredStudents = new List<Student>();
         }
 
         /**
@@ -40,6 +42,36 @@ namespace IzendaCourseManagementSystem
                 }
             }
             return -1;
+        }
+
+        /**
+         * 
+         */
+        public int SearchStudentById(int id)
+        {
+            for (int i = 0; i < RegisteredStudents.Count; i++)
+            {
+                if (RegisteredStudents[i].Id == id)
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        /* for debug */
+        public void ViewRegisteredStudents()
+        {
+            if (!RegisteredStudents.Any())
+            {
+                Console.WriteLine("No registered students");
+                return;
+            }
+
+            for (int i = 0; i < RegisteredStudents.Count; i++)
+            {
+                Console.WriteLine(RegisteredStudents[i]);
+            }
         }
 
         public override string ToString()

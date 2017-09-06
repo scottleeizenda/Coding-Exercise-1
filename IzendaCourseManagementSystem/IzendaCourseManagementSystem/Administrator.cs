@@ -85,5 +85,48 @@ namespace IzendaCourseManagementSystem
             courses.RemoveAt(courseIndex);
             return true;
         }
+
+        /**
+         * Displays all Instructors that an Administrator assigned a Course to.
+         * If the list is empty, returns false. Otherwise, successfully displays and returns true.
+         */
+        public bool ViewInstructors(List<Instructor> instructors)
+        {
+            if (!instructors.Any())
+            {
+                return false;
+            }
+
+            foreach(Instructor i in instructors)
+            {
+                Console.WriteLine(i);
+            }
+            return true;
+        }
+
+        /**
+         * Searches through param courses and returns the index of the course that matches param id.
+         * Returns -1 if not found.
+         */
+        public int SearchInstructorById(List<Instructor> instructors, int id)
+        {
+            for (int i = 0; i < instructors.Count; i++)
+            {
+                if (instructors[i].Id == id)
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        /**
+         * 
+         */
+        public bool AssignInstructor(Course selectedCourse, Instructor selectedInstructor)
+        {
+            selectedInstructor.AssignedCourses.Add(selectedCourse);
+            return true;
+        }
     }
 }

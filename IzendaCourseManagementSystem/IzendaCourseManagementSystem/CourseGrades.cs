@@ -19,5 +19,10 @@ namespace IzendaCourseManagementSystem
             CourseId = courseId;
             FinalGrade = finalGrade;
         }
+
+        public override string ToString()
+        {
+            return $"Course ID: {CourseId} - Final Grade: {FinalGrade}\n";
+        }
     }
 }
