@@ -21,26 +21,6 @@ namespace IzendaCourseManagementSystem
         }
 
         /**
-         * Displays all courses that an Administrator assigned to an Instructor.
-         * If the list is empty, returns false. Otherwise, successfully displays and returns true.
-         * BEWARE, NO PARAMS PASSED IN. Maybe think about restructuring later.
-         */
-        public bool ViewAssignedCourses()
-        {
-            if (!AssignedCourses.Any())
-            {
-                return false;
-            }
-
-            Console.WriteLine("You currently teach:\n");
-            foreach (Course c in AssignedCourses)
-            {
-                Console.WriteLine(c);
-            }
-            return true;
-        }
-
-        /**
          * Searches through AssignedCourses list and returns the index of the course that matches param id.
          * Returns -1 if not found. Check for empty list already done before method call.
          */
@@ -58,7 +38,7 @@ namespace IzendaCourseManagementSystem
 
         /**
          * Checks if param letterGrade is a valid grade, then adds a new CourseGrade to param selectedStudent's
-         * FinalGrades list. Returns false if letterGrade is invalid.
+         * FinalGrades list. Returns false if letterGrade is invalid. Also updates student's credit hours if need be.
          */
         public bool SubmitFinalGrade(Student selectedStudent, string letterGrade, int courseId, int courseGradeId)
         {
@@ -68,11 +48,19 @@ namespace IzendaCourseManagementSystem
                 letterGrade.Equals("D", StringComparison.OrdinalIgnoreCase) ||
                 letterGrade.Equals("F", StringComparison.OrdinalIgnoreCase))
             {
-                //selectedStudent.FinalGrades.Add(new CourseGrades(courseGradeId, courseId, letterGrade.ToUpper().ToCharArray()[0]));
+                // first update student's credit hours if final grade is at least a 'C'
                 selectedStudent.FinalGrades.Add(new CourseGrades(courseGradeId, courseId, letterGrade.ToUpper()[0]));
+                int index = Course.SearchCourseById(selectedStudent.RegisteredCourses, courseId);
+                if (letterGrade.ToUpper() == "A" || letterGrade.ToUpper() == "B" || letterGrade.ToUpper() == "C")
+                {
+                    selectedStudent.CreditHours += selectedStudent.RegisteredCourses[index].CreditHours;
+                    selectedStudent.Level = selectedStudent.CalculateLevel(selectedStudent.CreditHours);
+                }
+
+                // now deregister student regardless of what grade received
+                selectedStudent.DeregisterCourse(index);
                 return true;
             }
-
             return false;
         }
 

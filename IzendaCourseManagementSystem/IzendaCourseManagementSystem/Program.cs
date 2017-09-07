@@ -24,6 +24,7 @@ namespace IzendaCourseManagementSystem
         {
             if (action == 1) // create course
             {
+                Console.WriteLine("-----------------------------------------------------------------------------");
                 string[] courseFields = new string[6];
                 Console.Write("Enter the course ID: ");
                 courseFields[0] = Console.ReadLine();
@@ -47,6 +48,7 @@ namespace IzendaCourseManagementSystem
                 {
                     Console.WriteLine("Failed to create course.");
                 }
+                Console.WriteLine("-----------------------------------------------------------------------------");
                 return status;
             }
             else if (action == 2) // view courses
@@ -55,11 +57,13 @@ namespace IzendaCourseManagementSystem
                 if(!status)
                 {
                     Console.WriteLine("There are currently no existing courses.");
+                    Console.WriteLine("-----------------------------------------------------------------------------");
                 }
                 return status;
             }
             else if (action == 3) // edit course
             {
+                Console.WriteLine("-----------------------------------------------------------------------------");
                 Console.Write("Enter the ID of the course you would like to edit: ");
                 int id;
                 // make sure the inputted id is an int
@@ -68,6 +72,8 @@ namespace IzendaCourseManagementSystem
                     int index = Course.SearchCourseById(courses, id);
                     if (index >= 0)
                     {
+                        // TODO - allow functionality to keep a field same by entering blank
+
                         Console.WriteLine($"Course Successfully Found:\n{courses[index]}");
                         string[] courseFields = new string[5];
                         Console.Write("Enter the new course start date: ");
@@ -90,22 +96,26 @@ namespace IzendaCourseManagementSystem
                         {
                             Console.WriteLine("Failed to update course.");
                         }
+                        Console.WriteLine("-----------------------------------------------------------------------------");
                         return status;
                     }
                     else
                     {
                         Console.WriteLine($"Failed to find course of ID {id}");
+                        Console.WriteLine("-----------------------------------------------------------------------------");
                         return false;
                     }
                 }
                 else
                 {
                     Console.WriteLine("Invalid ID input");
+                    Console.WriteLine("-----------------------------------------------------------------------------");
                     return false;
                 }
             }
             else if (action == 4) // delete course
             {
+                Console.WriteLine("-----------------------------------------------------------------------------");
                 Console.Write("Enter the ID of the course you would like to delete: ");
                 int id;
                 // make sure the inputted id is an int
@@ -122,6 +132,7 @@ namespace IzendaCourseManagementSystem
                         {
                             bool status = currentAdmin.DeleteCourse(courses, index);
                             Console.WriteLine($"Successfully deleted course with ID {id}");
+                            Console.WriteLine("-----------------------------------------------------------------------------");
                             return status; // should always be true at this point (for now)
                         }
                         else if (choice.Equals("N", StringComparison.OrdinalIgnoreCase))
@@ -132,17 +143,20 @@ namespace IzendaCourseManagementSystem
                         {
                             Console.WriteLine("Invalid choice, returning to menu...");
                         }
+                        Console.WriteLine("-----------------------------------------------------------------------------");
                         return false; // if no successful delete occurs, return false no matter what
                     }
                     else
                     {
                         Console.WriteLine($"Failed to find course of ID {id}");
+                        Console.WriteLine("-----------------------------------------------------------------------------");
                         return false;
                     }
                 }
                 else
                 {
                     Console.WriteLine("Invalid ID input");
+                    Console.WriteLine("-----------------------------------------------------------------------------");
                     return false;
                 }
             }
@@ -165,6 +179,7 @@ namespace IzendaCourseManagementSystem
                 // loop for user input on selecting an instructor
                 while(true)
                 {
+                    Console.WriteLine("-----------------------------------------------------------------------------");
                     Console.WriteLine("Type the ID of the instructor you would like to assign a course to");
                     Console.WriteLine("[Enter 'list' to see all the available instructors]");
                     Console.Write("[Enter 'quit' to cancel]: ");
@@ -177,6 +192,7 @@ namespace IzendaCourseManagementSystem
                     else if (input.Equals("quit", StringComparison.OrdinalIgnoreCase))
                     {
                         Console.WriteLine("Cancelled, returning to menu...");
+                        Console.WriteLine("-----------------------------------------------------------------------------");
                         return false;
                     }
                     else if (Int32.TryParse(input, out id))
@@ -186,6 +202,7 @@ namespace IzendaCourseManagementSystem
                         {
                             selectedInstructor = instructors[index];
                             Console.WriteLine($"Instructor {selectedInstructor.FirstName} {selectedInstructor.LastName} successfully found.");
+                            Console.WriteLine("-----------------------------------------------------------------------------");
                             // loop for user input on selecting a course to assign
                             while (true)
                             {
@@ -213,11 +230,13 @@ namespace IzendaCourseManagementSystem
                                         if (status)
                                         {
                                             Console.WriteLine($"Instructor {selectedInstructor.FirstName} {selectedInstructor.LastName} has been assigned to teach course {selectedCourse.CourseName}");
+                                            Console.WriteLine("-----------------------------------------------------------------------------");
                                             return true;
                                         }
                                         else
                                         {
                                             Console.WriteLine($"Failed to assign {selectedInstructor.FirstName} {selectedInstructor.LastName} to teach the course {selectedCourse.CourseName}");
+                                            Console.WriteLine("-----------------------------------------------------------------------------");
                                             return false;
                                         }
                                     }
@@ -265,10 +284,11 @@ namespace IzendaCourseManagementSystem
             }
             else if (action == 2) // view assigned
             {
-                bool status = currentInstructor.ViewAssignedCourses();
+                bool status = currentInstructor.ViewCourses(currentInstructor.AssignedCourses);
                 if (!status)
                 {
                     Console.WriteLine("You are not currently assigned to teach any courses.");
+                    Console.WriteLine("-----------------------------------------------------------------------------");
                 }
                 return status;
             }
@@ -278,11 +298,13 @@ namespace IzendaCourseManagementSystem
                 if (currentInstructor.AssignedCourses.Count == 0)
                 {
                     Console.WriteLine("You currently have no courses assigned to you, so no final grades to submit.");
+                    Console.WriteLine("-----------------------------------------------------------------------------");
                     return false;
                 }
 
                 Course selectedCourse;
                 Student selectedStudent;
+                Console.WriteLine("-----------------------------------------------------------------------------");
                 // loop for user input on selecting an assigned course to submit grades for
                 while (true)
                 {
@@ -293,11 +315,12 @@ namespace IzendaCourseManagementSystem
                     int id;
                     if (input.Equals("list", StringComparison.OrdinalIgnoreCase))
                     {
-                        currentInstructor.ViewAssignedCourses();
+                        currentInstructor.ViewCourses(currentInstructor.AssignedCourses);
                     }
                     else if (input.Equals("quit", StringComparison.OrdinalIgnoreCase))
                     {
                         Console.WriteLine("Cancelled, returning to menu...");
+                        Console.WriteLine("-----------------------------------------------------------------------------");
                         return false;
                     }
                     else if (Int32.TryParse(input, out id))
@@ -307,6 +330,7 @@ namespace IzendaCourseManagementSystem
                         {
                             selectedCourse = currentInstructor.AssignedCourses[index];
                             Console.WriteLine($"Course {selectedCourse.CourseName} successfully found.");
+                            Console.WriteLine("-----------------------------------------------------------------------------");
                             // loop for user input on selecting a student to submit a grade for
                             while (true)
                             {
@@ -321,6 +345,7 @@ namespace IzendaCourseManagementSystem
                                 else if (input.Equals("quit", StringComparison.OrdinalIgnoreCase))
                                 {
                                     Console.WriteLine("Cancelled, returning to course select...");
+                                    Console.WriteLine("-----------------------------------------------------------------------------");
                                     break;
                                 }
                                 else if (Int32.TryParse(input, out id))
@@ -328,10 +353,9 @@ namespace IzendaCourseManagementSystem
                                     index = selectedCourse.SearchStudentById(id);
                                     if (index >= 0)
                                     {
-                                        // TODO - implement a way to be able to submit one final grade per course
-
                                         selectedStudent = selectedCourse.RegisteredStudents[index];
                                         Console.WriteLine($"Student {selectedStudent.FirstName} {selectedStudent.LastName} successfully found.");
+                                        Console.WriteLine("-----------------------------------------------------------------------------");
                                         Console.Write("What letter grade would you like to give this student for this course?: ");
                                         string letterGrade = Console.ReadLine();
                                         bool status = currentInstructor.SubmitFinalGrade(selectedStudent, letterGrade, selectedCourse.Id, courseGradeIdNumber);
@@ -339,23 +363,27 @@ namespace IzendaCourseManagementSystem
                                         if (status)
                                         {
                                             Console.WriteLine($"Final Grade '{letterGrade.ToUpper()}' has been submitted to for {selectedStudent.FirstName} {selectedStudent.LastName}");
+                                            Console.WriteLine("-----------------------------------------------------------------------------");
                                             return true;
                                         }
                                         else
                                         {
                                             Console.WriteLine($"Failed to submit final grade '{letterGrade.ToUpper()}', please use letters A-D or F");
+                                            Console.WriteLine("-----------------------------------------------------------------------------");
                                             return false;
                                         }
                                     }
                                     else
                                     {
                                         Console.WriteLine($"Failed to find registered student with ID {id}");
+                                        Console.WriteLine("-----------------------------------------------------------------------------");
                                         continue;
                                     }
                                 }
                                 else
                                 {
                                     Console.WriteLine("Invalid input, please try again.");
+                                    Console.WriteLine("-----------------------------------------------------------------------------");
                                     continue;
                                 }
                             }
@@ -363,12 +391,14 @@ namespace IzendaCourseManagementSystem
                         else
                         {
                             Console.WriteLine($"Failed to find course with ID {id}");
+                            Console.WriteLine("-----------------------------------------------------------------------------");
                             continue;
                         }
                     }
                     else
                     {
                         Console.WriteLine("Invalid input, please try again");
+                        Console.WriteLine("-----------------------------------------------------------------------------");
                     }
                 }
             }
@@ -385,35 +415,47 @@ namespace IzendaCourseManagementSystem
                 bool status = currentStudent.ViewCourses(courses);
                 if (!status)
                 {
+                    Console.WriteLine("-----------------------------------------------------------------------------");
                     Console.WriteLine("There are currently no existing courses.");
+                    Console.WriteLine("-----------------------------------------------------------------------------");
                 }
                 return status;
             }
             else if (action == 2) // view registered
             {
-                bool status = currentStudent.ViewRegisteredCourses();
+                bool status = currentStudent.ViewCourses(currentStudent.RegisteredCourses);
                 if (!status)
                 {
+                    Console.WriteLine("-----------------------------------------------------------------------------");
                     Console.WriteLine("You are not currently registered for any courses.");
+                    Console.WriteLine("-----------------------------------------------------------------------------");
                 }
                 return status;
             }
             else if (action == 3) // view info
             {
+                Console.WriteLine("-----------------------------------------------------------------------------");
                 Console.WriteLine(currentStudent);
+                Console.WriteLine("-----------------------------------------------------------------------------");
                 return true;
             }
             else if (action == 4) // view grades
             {
+                // TODO - show grades in more detail, currently only shows course ID with final grade.
+                //        Preferrably have it show course name and ID.
+
                 bool status = currentStudent.ViewFinalGrades();
                 if (!status)
                 {
+                    Console.WriteLine("-----------------------------------------------------------------------------");
                     Console.WriteLine("You have not completed any courses.");
+                    Console.WriteLine("-----------------------------------------------------------------------------");
                 }
                 return status;
             }
             else if (action == 5) // register course
             {
+                Console.WriteLine("-----------------------------------------------------------------------------");
                 Console.Write("Enter the ID of the course you would like to register for: ");
                 int id;
                 // make sure the inputted id is an int
@@ -423,27 +465,37 @@ namespace IzendaCourseManagementSystem
                     if (index >= 0)
                     {
                         Console.WriteLine($"Course Successfully Found, adding this course to your registered courses:\n{courses[index]}");
-                        courses[index].RegisteredStudents.Add(currentStudent); // add student to RegisteredStudents list in Course
-                        bool status = currentStudent.RegisterCourse(courses, index);
-                        if (status)
+                        int status = currentStudent.RegisterCourse(courses[index]);
+                        if (status == 1)
                         {
                             Console.WriteLine("Course successfully registered.");
+                            courses[index].RegisteredStudents.Add(currentStudent); // also add student to RegisteredStudents list in Course
+                            Console.WriteLine("-----------------------------------------------------------------------------");
+                            return true;
                         }
-                        else
+                        else if (status == -1)
                         {
-                            Console.WriteLine("Failed to register course.");
+                            Console.WriteLine("You are already registered for this course!");
+                            Console.WriteLine("-----------------------------------------------------------------------------");
                         }
-                        return status;
+                        else if (status == -2)
+                        {
+                            Console.WriteLine("You have already completed this course!");
+                            Console.WriteLine("-----------------------------------------------------------------------------");
+                        }
+                        return false;
                     }
                     else
                     {
                         Console.WriteLine($"Failed to find course of ID {id}");
+                        Console.WriteLine("-----------------------------------------------------------------------------");
                         return false;
                     }
                 }
                 else
                 {
                     Console.WriteLine("Invalid ID input");
+                    Console.WriteLine("-----------------------------------------------------------------------------");
                     return false;
                 }
             }
@@ -452,19 +504,34 @@ namespace IzendaCourseManagementSystem
                 if (currentStudent.RegisteredCourses.Count == 0)
                 {
                     Console.WriteLine("You are not currently registered for any courses");
+                    Console.WriteLine("-----------------------------------------------------------------------------");
                     return false;
                 }
-
+                Console.WriteLine("-----------------------------------------------------------------------------");
                 Console.Write("Enter the ID of the course you would like to deregister: ");
                 int id;
                 // make sure the inputted id is an int
                 if (Int32.TryParse(Console.ReadLine(), out id))
                 {
-                    int index = currentStudent.SearchRegisteredCourse(id);
+                    //int index = currentStudent.SearchRegisteredCourse(id); // index for RegisteredCourses list in Student
+                    int index = Course.SearchCourseById(currentStudent.RegisteredCourses, id); // index for RegisteredCourses list in Student
                     if (index >= 0)
                     {
                         Console.WriteLine($"Course Successfully Found, removing this course from your registered courses:\n{courses[index]}");
-                        courses[index].RegisteredStudents.RemoveAt(index); // remove student from RegisteredStudents list in Course
+
+                        // also remove student from RegisteredStudents list in Course
+                        /*int courseIndex = Course.SearchCourseById(courses, id); // index for courses list in main
+                        courses[courseIndex].ViewRegisteredStudents();
+                        int studentIndex = courses[courseIndex].SearchStudentById(currentStudent.Id); // index for RegisteredStudents list in Course
+                        courses[courseIndex].RegisteredStudents.RemoveAt(studentIndex);
+                        courses[courseIndex].ViewRegisteredStudents();*/
+
+                        /*Course courseToDeregister = currentStudent.RegisteredCourses[index];
+                        //courseToDeregister.ViewRegisteredStudents();
+                        int studentIndex = courseToDeregister.SearchStudentById(currentStudent.Id);
+                        courseToDeregister.RegisteredStudents.RemoveAt(studentIndex);
+                        //courseToDeregister.ViewRegisteredStudents();*/
+
                         bool status = currentStudent.DeregisterCourse(index);
                         if (status)
                         {
@@ -474,26 +541,34 @@ namespace IzendaCourseManagementSystem
                         {
                             Console.WriteLine("Failed to deregister course.");
                         }
+                        Console.WriteLine("-----------------------------------------------------------------------------");
                         return status;
                     }
                     else
                     {
                         Console.WriteLine($"Failed to find course of ID {id} in your registered courses");
+                        Console.WriteLine("-----------------------------------------------------------------------------");
                         return false;
                     }
                 }
                 else
                 {
                     Console.WriteLine("Invalid ID input");
+                    Console.WriteLine("-----------------------------------------------------------------------------");
                     return false;
                 }
             }
         }
 
         /**
+         * TODO - make all user's ViewCourses method have the option to view a specific course, category of courses, or list all courses
+         */
+        //public static bool ViewSelectCourses()
+
+        /**
          * 
          */
-        public static int CheckCredentials(string userName, string password, int userType)
+        static int CheckCredentials(string userName, string password, int userType)
         {
             if (userType == 1) // Admin
             {
@@ -504,8 +579,8 @@ namespace IzendaCourseManagementSystem
                     {
                         return i;
                     }
-                    return -1;
                 }
+                return -1;
             }
             else if (userType == 2) // Instructor
             {
@@ -516,8 +591,8 @@ namespace IzendaCourseManagementSystem
                     {
                         return i;
                     }
-                    return -1;
                 }
+                return -1;
             }
             else if (userType == 3) // Student
             {
@@ -528,8 +603,8 @@ namespace IzendaCourseManagementSystem
                     {
                         return i;
                     }
-                    return -1;
                 }
+                return -1;
             }
 
             return -1;
@@ -554,6 +629,8 @@ namespace IzendaCourseManagementSystem
             courses.Add(new Course(1302, DateTime.Now, DateTime.Now, 4, "CSCI1302", "Software Development"));
             courses.Add(new Course(1730, DateTime.Now, DateTime.Now, 4, "CSCI1730", "Systems Programming"));
             courses.Add(new Course(2670, DateTime.Now, DateTime.Now, 4, "CSCI2670", "Intro to the Theory of Computing"));
+            courses.Add(new Course(2720, DateTime.Now, DateTime.Now, 4, "CSCI2720", "Data Structures"));
+            courses.Add(new Course(3030, DateTime.Now, DateTime.Now, 3, "CSCI3030", "Computer Ethics"));
             students[0].RegisteredCourses.Add(courses[1]);
             courses[1].RegisteredStudents.Add(students[0]);
             students[0].FinalGrades.Add(new CourseGrades(1, 1302, 'B'));
@@ -574,6 +651,11 @@ namespace IzendaCourseManagementSystem
             Administrator currentAdmin;
             Instructor currentInstructor;
             Student currentStudent;
+
+            currentAdmin = administrators[0];
+            currentInstructor = instructors[1];
+            currentStudent = students[0];
+
             // infinite loop to retry in case of invalid input and handle log in
             while (true)
             {
@@ -591,11 +673,12 @@ namespace IzendaCourseManagementSystem
                         Console.WriteLine("Please enter a number in the options above");
                         continue;
                     }
-                    break;
+                    // else continue to login code
                 }
                 else
                 {
                     Console.WriteLine("Invalid input, please try again");
+                    continue;
                 }
 
                 // login
@@ -628,14 +711,9 @@ namespace IzendaCourseManagementSystem
                 }
                 if (loginIndex >= 0) { break; }
             }
-            
-            // TODO - fix this temp solution
-            currentAdmin = administrators[0];
-            currentInstructor = instructors[1];
-            currentStudent = students[0];
 
             // Display and handle user actions based on previous option
-
+            Console.WriteLine("-----------------------------------------------------------------------------");
             int action;
             if (option == 1) // Admin
             {

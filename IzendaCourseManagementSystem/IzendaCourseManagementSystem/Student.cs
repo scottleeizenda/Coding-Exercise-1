@@ -54,25 +54,6 @@ namespace IzendaCourseManagementSystem
         }
 
         /**
-         * Displays all courses the Student is registered for from the RegisteredCourses list.
-         * If the list is empty, returns false. Otherwise, successfully displays and returns true.
-         * BEWARE, NO PARAMS PASSED IN. Maybe think about restructuring later.
-         */
-        public bool ViewRegisteredCourses()
-        {
-            if (!RegisteredCourses.Any())
-            {
-                return false;
-            }
-
-            foreach (Course c in RegisteredCourses)
-            {
-                Console.WriteLine(c);
-            }
-            return true;
-        }
-
-        /**
          * Displays all CourseGrades the student has earned.
          * If the list is empty, returns false. Otherwise, successfully displays and returns true.
          * BEWARE, NO PARAMS PASSED IN. Maybe think about restructuring later.
@@ -84,50 +65,57 @@ namespace IzendaCourseManagementSystem
                 return false;
             }
 
+            Console.WriteLine("-----------------------------------------------------------------------------");
             foreach (CourseGrades cg in FinalGrades)
             {
                 Console.WriteLine(cg);
             }
+            Console.WriteLine("-----------------------------------------------------------------------------");
             return true;
         }
 
         /**
          * Adds the Course specified in the params to the RegisteredCourses list.
-         * Check for valid course and index done before this method call.
+         * Returns 1 upon success, -1 if duplicate course in RegisteredCourses, -2 if course already completed.
          */
-        public bool RegisterCourse(List<Course> courses, int index)
+        public int RegisterCourse(Course courseToRegister)
         {
-            RegisteredCourses.Add(courses[index]);
-            return true;
-        }
-
-        /**
-         * Searches through the RegisteredCourses list and returns the index of the course
-         * that matches param id. Returns -1 if not found. Returns -2 if list is empty.
-         */
-        public int SearchRegisteredCourse(int id)
-        {
-            if (!RegisteredCourses.Any())
-            {
-                return -2;
-            }
-
+            // Check if already registered for param course
             for (int i = 0; i < RegisteredCourses.Count; i++)
             {
-                if (RegisteredCourses[i].Id == id)
+                if (courseToRegister.Id == RegisteredCourses[i].Id)
                 {
-                    return i;
+                    return -1;
                 }
             }
-            return -1;
+
+            // Check if already taken the param course
+            // TODO - improve by allowing student to take course again if student made below a 'C'
+            for (int i = 0; i < FinalGrades.Count; i++)
+            {
+                if (courseToRegister.Id == FinalGrades[i].CourseId)
+                {
+                    return -2;
+                }
+            }
+
+            // Otherwise, good to register for course
+            RegisteredCourses.Add(courseToRegister);
+            return 1;
         }
 
         /**
-         * Adds the Course specified in the params to the RegisteredCourses list.
+         * Removes the Course specified in the params to the RegisteredCourses list. Also updates RegisteredStudents list in Course.
          * Check for valid course and index done before this method call.
          */
         public bool DeregisterCourse(int index)
         {
+            // first deregister student from RegisteredStudents list in Course
+            Course courseToDeregister = this.RegisteredCourses[index];
+            int studentIndex = courseToDeregister.SearchStudentById(this.Id);
+            courseToDeregister.RegisteredStudents.RemoveAt(studentIndex);
+
+            // now remove course from RegisteredCourses list in this Student
             RegisteredCourses.RemoveAt(index);
             return true;
         }

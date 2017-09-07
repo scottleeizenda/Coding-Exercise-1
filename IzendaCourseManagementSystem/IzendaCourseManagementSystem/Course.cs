@@ -15,7 +15,7 @@ namespace IzendaCourseManagementSystem
         public int CreditHours { get; set; }
         public string CourseName { get; set; }
         public string CourseDescription { get; set; }
-        public List<Student> RegisteredStudents { get; set; }
+        public List<Student> RegisteredStudents { get; set; } // this assumes one set of students per course
 
         public Course(int id, DateTime startDate, DateTime endDate, int creditHours, string courseName, string courseDescription)
         {
@@ -30,10 +30,15 @@ namespace IzendaCourseManagementSystem
 
         /**
          * Searches through param courses and returns the index of the course that matches param id.
-         * Returns -1 if not found.
+         * Returns -1 if not found. Returns -2 if courses list is empty.
          */
         public static int SearchCourseById(List<Course> courses, int id)
         {
+            if (!courses.Any())
+            {
+                return -2;
+            }
+
             for (int i = 0; i < courses.Count; i++)
             {
                 if (courses[i].Id == id)
@@ -59,19 +64,25 @@ namespace IzendaCourseManagementSystem
             return -1;
         }
 
-        /* for debug */
-        public void ViewRegisteredStudents()
+        /**
+         * 
+         */
+        public bool ViewRegisteredStudents()
         {
             if (!RegisteredStudents.Any())
             {
                 Console.WriteLine("No registered students");
-                return;
+                Console.WriteLine("-----------------------------------------------------------------------------");
+                return false;
             }
 
+            Console.WriteLine("-----------------------------------------------------------------------------");
             for (int i = 0; i < RegisteredStudents.Count; i++)
             {
                 Console.WriteLine(RegisteredStudents[i]);
             }
+            Console.WriteLine("-----------------------------------------------------------------------------");
+            return true;
         }
 
         public override string ToString()

@@ -27,7 +27,7 @@ namespace IzendaCourseManagementSystem
         }
 
         /**
-         * Displays all available courses in the courses list.
+         * Displays all available courses in the param courses list.
          * If the list is empty, returns false. Otherwise, successfully displays and returns true.
          */
         public bool ViewCourses(List<Course> courses)
@@ -36,11 +36,13 @@ namespace IzendaCourseManagementSystem
             {
                 return false;
             }
-            
+
+            Console.WriteLine("-----------------------------------------------------------------------------");
             foreach (Course c in courses)
             {
                 Console.WriteLine(c);
             }
+            Console.WriteLine("-----------------------------------------------------------------------------");
             return true;
         }
     }
