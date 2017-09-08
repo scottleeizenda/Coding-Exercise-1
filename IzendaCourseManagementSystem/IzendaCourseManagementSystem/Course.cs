@@ -71,7 +71,8 @@ namespace IzendaCourseManagementSystem
         {
             if (!RegisteredStudents.Any())
             {
-                Console.WriteLine("No registered students");
+                Console.WriteLine("-----------------------------------------------------------------------------");
+                Console.WriteLine("No registered students for this course.");
                 Console.WriteLine("-----------------------------------------------------------------------------");
                 return false;
             }
