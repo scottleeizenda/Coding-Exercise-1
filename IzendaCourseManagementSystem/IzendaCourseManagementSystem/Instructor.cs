@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Data;
+using System.Data.SqlClient;
 
 namespace IzendaCourseManagementSystem
 {
@@ -18,6 +20,38 @@ namespace IzendaCourseManagementSystem
             HireDate = hireDate;
             UserType = "Instructor";
             AssignedCourses = new List<Course>();
+        }
+
+        /// <summary>
+        ///     Displays the Courses that an Instructor is assigned to teach through the Instructor_Course table.
+        ///     SELECT's and shows only the Courses for the specified Instructor from the instructorId param.
+        ///     Returns true upon successfully displaying. Otherwise, returns false if anything goes wrong.
+        /// </summary>
+        public bool ViewAssignedCourses(SqlConnection connection, int instructorId)
+        {
+            // SELECT only the courses the specified Instructor teaches
+            try
+            {
+                SqlDataAdapter adapter = new SqlDataAdapter($"SELECT * FROM Instructor_Course WHERE InstructorID = {instructorId}", connection);
+                DataSet set = new DataSet();
+                adapter.Fill(set, "Instructor_Course");
+                DataTable table = set.Tables["Instructor_Course"];
+                
+                Console.WriteLine("-----------------------------------------------------------------------------");
+                foreach (DataRow row in table.Rows)
+                {
+                    // Lookup and show full Course information from CourseId
+                    int currentCourseId = int.Parse(row["CourseId"].ToString());
+                    Console.WriteLine(Course.SearchCourseById(connection, currentCourseId));
+                }
+                Console.WriteLine("-----------------------------------------------------------------------------");
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
         
         /// <summary>
@@ -61,11 +95,11 @@ namespace IzendaCourseManagementSystem
         /// <param name="courses">List of all existing courses</param>
         /// <param name="action">Number to represent what course of action for an Instructor to take</param>
         /// <returns>True/False of whether the action has been completed or not</returns>
-        public bool InstructorActionHandler(List<Course> courses, int action)
+        public bool InstructorActionHandler(List<Course> courses, SqlConnection connection, int action)
         {
             if (action == 1) // view courses
             {
-                bool status = this.ViewCourses(courses);
+                bool status = this.ViewCourses(connection);
                 if (!status)
                 {
                     Console.WriteLine("There are currently no existing courses.");
@@ -74,7 +108,7 @@ namespace IzendaCourseManagementSystem
             }
             else if (action == 2) // view assigned
             {
-                bool status = this.ViewCourses(this.AssignedCourses);
+                bool status = this.ViewAssignedCourses(connection, this.Id);
                 if (!status)
                 {
                     Console.WriteLine("You are not currently assigned to teach any courses.");
@@ -105,7 +139,8 @@ namespace IzendaCourseManagementSystem
                     int id;
                     if (input.Equals("list", StringComparison.OrdinalIgnoreCase))
                     {
-                        this.ViewCourses(this.AssignedCourses);
+                        //this.ViewCourses(this.AssignedCourses);
+                        Console.WriteLine("DB needs to be implemented");
                     }
                     else if (input.Equals("quit", StringComparison.OrdinalIgnoreCase))
                     {

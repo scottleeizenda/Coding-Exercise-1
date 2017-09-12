@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Data.SqlClient;
 
 namespace IzendaCourseManagementSystem
 {
@@ -18,6 +19,8 @@ namespace IzendaCourseManagementSystem
         static Student CurrentStudent;
 
         public static int courseGradeIdNumber;
+        public static string connString;
+        public static SqlConnection connection;
 
         /**
          * TODO - make all user's ViewCourses method have the option to view a specific course, category of Courses, or list all Courses
@@ -166,6 +169,20 @@ namespace IzendaCourseManagementSystem
             Instructors[2].AssignedCourses.Add(Courses[2]);
             courseGradeIdNumber = 1;
 
+            /***** DB TESTING *****/
+            connString = "Integrated Security=SSPI;Persist Security Info=False;Initial Catalog=IzendaCourseManagementSystem;Data Source=SLEE-PC";
+            connection = new SqlConnection(connString);
+            connection.Open();
+            Console.WriteLine("Database Connection Successful!");
+            Administrator admin2 = new Administrator(2, "admin", "2", DateTime.Now, "admin2", "AdminTwo");
+            //admin2.ViewCoursesDB(connection);
+            string[] fields = { "10001301", "08/14/2017", "12/05/2017", "4", "CSCI1301", "Intro to Java Programming" };
+            //admin2.CreateCourseDB(connection, fields);
+            //Console.WriteLine("-----------------------------------------------------------------------------");
+            //Console.WriteLine(Course.SearchCourseByIdDB(connection, 10001301));
+            fields[5] = "Introduction to Java Programming";
+            //Console.WriteLine(admin2.UpdateCourseDB(connection, 10001301, fields));
+            //Console.WriteLine(admin2.DeleteCourseDB(connection, 10001301));
 
 
             /****** Start of the text-based user interactions ******/
@@ -198,13 +215,15 @@ namespace IzendaCourseManagementSystem
                         Console.WriteLine("[Enter '4' to delete an existing course]");
                         Console.WriteLine("[Enter '5' to assign a course to an instructor]");
                         // TODO - consider adding option to view what Instructors are assigned to what Courses
+                        // TODO - consider adding option to unassign Instructor from a Course
                         Console.WriteLine("[Enter '6' to quit]");
 
                         if (Int32.TryParse(Console.ReadLine(), out action))
                         {
                             if (action >= 1 && action <= 5)
                             {
-                                CurrentAdmin.AdminActionHandler(Courses, Instructors, action);
+                                // TODO - store status and add error mesage in the case of "false"
+                                CurrentAdmin.AdminActionHandler(connection, action);
                             }
                             else if (action == 6)
                             {
@@ -239,7 +258,8 @@ namespace IzendaCourseManagementSystem
                         {
                             if (action >= 1 && action <= 3)
                             {
-                                CurrentInstructor.InstructorActionHandler(Courses, action);
+                                // TODO - store status and add error mesage in the case of "false"
+                                CurrentInstructor.InstructorActionHandler(Courses, connection, action);
                             }
                             else if (action == 4)
                             {
@@ -277,7 +297,8 @@ namespace IzendaCourseManagementSystem
                         {
                             if (action >= 1 && action <= 6)
                             {
-                                CurrentStudent.StudentActionHandler(Courses, action);
+                                // TODO - store status and add error mesage in the case of "false"
+                                CurrentStudent.StudentActionHandler(Courses, connection, action);
                             }
                             else if (action == 7)
                             {

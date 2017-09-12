@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Data.SqlClient;
 
 namespace IzendaCourseManagementSystem
 {
@@ -134,11 +135,12 @@ namespace IzendaCourseManagementSystem
         /// <param name="courses">List of all existing courses</param>
         /// <param name="action">Number to represent what course of action for a Student to take</param>
         /// <returns>True/False of whether the action has been completed or not</returns>
-        public bool StudentActionHandler(List<Course> courses, int action)
+        public bool StudentActionHandler(List<Course> courses, SqlConnection connection, int action)
         {
             if (action == 1) // view courses
             {
-                bool status = this.ViewCourses(courses);
+                //bool status = this.ViewCourses(courses);
+                bool status = this.ViewCourses(connection);
                 if (!status)
                 {
                     Console.WriteLine("-----------------------------------------------------------------------------");
@@ -149,7 +151,9 @@ namespace IzendaCourseManagementSystem
             }
             else if (action == 2) // view registered
             {
-                bool status = this.ViewCourses(this.RegisteredCourses);
+                //bool status = this.ViewCourses(this.RegisteredCourses);
+                bool status = false;
+                Console.WriteLine("DB not yet implemented");
                 if (!status)
                 {
                     Console.WriteLine("-----------------------------------------------------------------------------");

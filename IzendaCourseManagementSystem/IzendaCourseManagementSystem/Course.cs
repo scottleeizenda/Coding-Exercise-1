@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Data;
+using System.Data.SqlClient;
 
 namespace IzendaCourseManagementSystem
 {
@@ -47,6 +49,29 @@ namespace IzendaCourseManagementSystem
                 }
             }
             return -1;
+        }
+
+        public static Course SearchCourseById(SqlConnection connection, int id)
+        {
+            try
+            {
+                SqlDataAdapter adapter = new SqlDataAdapter("SELECT * FROM Course", connection);
+                SqlCommandBuilder builder = new SqlCommandBuilder(adapter);
+                DataSet set = new DataSet();
+                adapter.Fill(set, "Course");
+                set.Tables["Course"].Constraints.Add("Id_PK", set.Tables["Course"].Columns["Id"], true);
+
+                DataRow row = set.Tables["Course"].Rows.Find(id);
+                DateTime startDate = DateTime.Parse(row["StartDate"].ToString());
+                DateTime endDate = DateTime.Parse(row["EndDate"].ToString());
+                int hours = Int32.Parse(row["CreditHours"].ToString());
+
+                return new Course(id, startDate, endDate, hours, row["CourseName"].ToString(), row["CourseDescription"].ToString());
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         /**
