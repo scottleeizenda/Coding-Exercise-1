@@ -234,12 +234,37 @@ namespace IzendaCourseManagementSystem
                 return false;
             }
         }
-        
+
         /// <summary>
         ///     Searches through the Instructor table in the database by ID and returns a new Instructor object
         ///     with matching attributes from the table columns. Returns null if Instructor not found.
         /// </summary>
-        public Instructor SearchInstructorById(SqlConnection connection, int id)
+        public static Administrator SearchAdministratorById(SqlConnection connection, int id)
+        {
+            try
+            {
+                SqlDataAdapter adapter = new SqlDataAdapter("SELECT * FROM Administrator", connection);
+                SqlCommandBuilder builder = new SqlCommandBuilder(adapter);
+                DataSet set = new DataSet();
+                adapter.Fill(set, "Administrator");
+                set.Tables["Administrator"].Constraints.Add("Id_PK", set.Tables["Administrator"].Columns["Id"], true);
+
+                DataRow row = set.Tables["Administrator"].Rows.Find(id);
+                DateTime hireDate = DateTime.Parse(row["HireDate"].ToString());
+
+                return new Administrator(id, row["FirstName"].ToString(), row["LastName"].ToString(), hireDate, row["UserName"].ToString(), row["Password"].ToString());
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        ///     Searches through the Instructor table in the database by ID and returns a new Instructor object
+        ///     with matching attributes from the table columns. Returns null if Instructor not found.
+        /// </summary>
+        public static Instructor SearchInstructorById(SqlConnection connection, int id)
         {
             try
             {
@@ -470,7 +495,7 @@ namespace IzendaCourseManagementSystem
                     }
                     else if (Int32.TryParse(input, out id))
                     {
-                        selectedInstructor = this.SearchInstructorById(connection, id);
+                        selectedInstructor = SearchInstructorById(connection, id);
                         if (selectedInstructor != null)
                         {
                             Console.WriteLine($"Instructor {selectedInstructor.FirstName} {selectedInstructor.LastName} successfully found.");

@@ -89,6 +89,28 @@ namespace IzendaCourseManagementSystem
             return -1;
         }
 
+        public static Student SearchStudentById(SqlConnection connection, int id)
+        {
+            try
+            {
+                SqlDataAdapter adapter = new SqlDataAdapter("SELECT * FROM Student", connection);
+                SqlCommandBuilder builder = new SqlCommandBuilder(adapter);
+                DataSet set = new DataSet();
+                adapter.Fill(set, "Student");
+                set.Tables["Student"].Constraints.Add("Id_PK", set.Tables["Student"].Columns["Id"], true);
+
+                DataRow row = set.Tables["Student"].Rows.Find(id);
+                float gpa = float.Parse(row["GPA"].ToString());
+                int hours = Int32.Parse(row["CreditHours"].ToString());
+
+                return new Student(id, row["FirstName"].ToString(), row["LastName"].ToString(), row["UserName"].ToString(), row["Password"].ToString(), gpa, hours);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         /**
          * 
          */
@@ -109,6 +131,34 @@ namespace IzendaCourseManagementSystem
             }
             Console.WriteLine("-----------------------------------------------------------------------------");
             return true;
+        }
+
+        public bool ViewRegisteredStudents(SqlConnection connection)
+        {
+            // SELECT only the students registered for the specified course
+            try
+            {
+                SqlDataAdapter adapter = new SqlDataAdapter($"SELECT * FROM Student_Course WHERE CourseID = {this.Id}", connection);
+                DataSet set = new DataSet();
+                adapter.Fill(set, "Student_Course");
+                DataTable table = set.Tables["Student_Course"];
+
+                Console.WriteLine("-----------------------------------------------------------------------------");
+                foreach (DataRow row in table.Rows)
+                {
+                    // Lookup and show full Course information from CourseId
+                    int currentStudentId = int.Parse(row["StudentId"].ToString());
+                    //Console.WriteLine(Course.SearchCourseById(connection, this.Id));
+                    Console.WriteLine(SearchStudentById(connection, currentStudentId));
+                }
+                Console.WriteLine("-----------------------------------------------------------------------------");
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public override string ToString()

@@ -63,6 +63,12 @@ CREATE TABLE Student_CourseGrades
 	CourseGradesId int FOREIGN KEY REFERENCES CourseGrades(Id) NOT NULL
 )
 
+CREATE TABLE Student_Course
+(
+	StudentId int FOREIGN KEY REFERENCES Student(Id) NOT NULL,
+	CourseId int FOREIGN KEY REFERENCES Course(Id) NOT NULL
+)
+
 INSERT INTO Administrator (Id, FirstName, LastName, HireDate, UserName, Password, UserType)
 VALUES (1, 'Admin', 'One', '2017-09-09', 'admin1', 'AdminOne', 'Administrator');
 
@@ -90,3 +96,15 @@ INSERT INTO Course (Id, StartDate, EndDate, CreditHours, CourseName, CourseDescr
 VALUES (10002720, '2017-08-14', '2017-12-05', 4, 'CSCI2720', 'Data Structures');
 INSERT INTO Course (Id, StartDate, EndDate, CreditHours, CourseName, CourseDescription)
 VALUES (10003030, '2017-08-14', '2017-12-05', 3, 'CSCI3030', 'Computer Ethics');
+
+INSERT INTO CourseGrades (Id, CourseId, FinalGrade) VALUES (1, 10001302, 'B');
+INSERT INTO CourseGrades (Id, CourseId, FinalGrade) VALUES (2, 10001302, 'A');
+INSERT INTO CourseGrades (Id, CourseId, FinalGrade) VALUES (3, 10001730, 'A');
+INSERT INTO CourseGrades (Id, CourseId, FinalGrade) VALUES (4, 10002670, 'A');
+
+INSERT INTO Student_CourseGrades (StudentId, CourseGradesId) VALUES (5000, 1);
+INSERT INTO Student_CourseGrades (StudentId, CourseGradesId) VALUES (5001, 2);
+INSERT INTO Student_CourseGrades (StudentId, CourseGradesId) VALUES (5001, 3);
+INSERT INTO Student_CourseGrades (StudentId, CourseGradesId) VALUES (5001, 4);
+
+INSERT INTO Student_Course (StudentId, CourseId) VALUES (5000, 10001730);

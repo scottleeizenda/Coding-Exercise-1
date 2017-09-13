@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Data;
 using System.Data.SqlClient;
 
 namespace IzendaCourseManagementSystem
@@ -74,7 +75,39 @@ namespace IzendaCourseManagementSystem
             Console.WriteLine("-----------------------------------------------------------------------------");
             return true;
         }
-        
+
+        /// <summary>
+        ///     Displays the Courses that a Student is registered for through the Student_Course table.
+        ///     SELECT's and shows only the Courses for the specified Student from the calling object.
+        ///     Returns true upon successfully displaying. Otherwise, returns false if anything goes wrong.
+        /// </summary>
+        public bool ViewRegisteredCourses(SqlConnection connection)
+        {
+            // SELECT only the courses the specified Instructor teaches
+            try
+            {
+                SqlDataAdapter adapter = new SqlDataAdapter($"SELECT * FROM Student_Course WHERE StudentID = {this.Id}", connection);
+                DataSet set = new DataSet();
+                adapter.Fill(set, "Student_Course");
+                DataTable table = set.Tables["Student_Course"];
+
+                Console.WriteLine("-----------------------------------------------------------------------------");
+                foreach (DataRow row in table.Rows)
+                {
+                    // Lookup and show full Course information from CourseId
+                    int currentCourseId = int.Parse(row["CourseId"].ToString());
+                    Console.WriteLine(Course.SearchCourseById(connection, currentCourseId));
+                }
+                Console.WriteLine("-----------------------------------------------------------------------------");
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         /// <summary>
         ///     Adds Course courseToRegister param to the Student's RegisteredCourses List. Courses that a Student
         ///     is already registered for or already completed will not be added.
@@ -122,6 +155,71 @@ namespace IzendaCourseManagementSystem
             return true;
         }
 
+        public bool DeregisterCourse(SqlConnection connection, int studentId, int courseId)
+        {
+            try
+            {
+                SqlDataAdapter adapter = new SqlDataAdapter($"SELECT * FROM Student_Course WHERE StudentID = {studentId}", connection);
+                SqlCommandBuilder builder = new SqlCommandBuilder(adapter);
+                DataSet set = new DataSet();
+                adapter.Fill(set, "Student_Course");
+                set.Tables["Student_Course"].Constraints.Add("CourseId_PK", set.Tables["Student_Course"].Columns["CourseId"], true);
+                set.Tables["Student_Course"].Rows.Find(courseId).Delete();
+                adapter.Update(set.Tables["Student_Course"]);
+
+                // TODO - change DB assocation tables to have PK Id to complete above action
+                //        Then add a means to keep track of subsequent Id's like the CourseGrades Id
+
+                //DataTable table = set.Tables["Student_Course"];
+
+                /*DataRow row = table.Rows[0];
+                Console.Write($"{row["StudentID"].ToString()}, {row["CourseId"].ToString()}");
+                row.Delete();
+                adapter.Update(set.Tables["Student_Course"]);
+                */
+                
+                /*int currentCourseId;
+                foreach (DataRow row in table.Rows)
+                {
+                    currentCourseId = int.Parse(row["CourseId"].ToString());
+                    // if traversing CourseId == CourseId of the course to deregister
+                    if (currentCourseId == courseId)
+                    {
+                        row.Delete();
+                        adapter.Update(set.Tables["Student_Course"]);
+                        break;
+                    }
+                }*/
+
+                return true;
+            }
+            catch (InvalidOperationException ioe)
+            {
+                Console.Write(ioe);
+                return false;
+            }
+            catch (ArgumentNullException ane)
+            {
+                Console.Write(ane);
+                return false;
+            }
+            catch (DBConcurrencyException dbce)
+            {
+                Console.Write(dbce);
+                return false;
+            }
+            catch (SystemException se)
+            {
+                Console.Write(se);
+                return false;
+            }
+            catch
+            {
+                Console.Write("Something went real wrong, I guess");
+                return false;
+            }
+        }
+
         /// <summary>
         ///     Handles a Student action specified by user input from Main. Database not yet implemented,
         ///     so data comes from Lists created in Main. The check for a valid action number also done in Main.
@@ -151,9 +249,7 @@ namespace IzendaCourseManagementSystem
             }
             else if (action == 2) // view registered
             {
-                //bool status = this.ViewCourses(this.RegisteredCourses);
-                bool status = false;
-                Console.WriteLine("DB not yet implemented");
+                bool status = this.ViewRegisteredCourses(connection);
                 if (!status)
                 {
                     Console.WriteLine("-----------------------------------------------------------------------------");

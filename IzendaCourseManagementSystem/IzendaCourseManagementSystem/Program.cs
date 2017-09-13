@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Data;
 using System.Data.SqlClient;
 
 namespace IzendaCourseManagementSystem
@@ -30,7 +31,7 @@ namespace IzendaCourseManagementSystem
         /**
          * 
          */
-        static int CheckCredentials(string userName, string password, int userType)
+        /*static int CheckCredentials(string userName, string password, int userType)
         {
             if (userType == 1) // Admin
             {
@@ -70,13 +71,59 @@ namespace IzendaCourseManagementSystem
             }
 
             return -1;
+        }*/
+
+        static int CheckCredentials(string userName, string password, int userType)
+        {
+            SqlDataAdapter adapter;
+            DataSet set;
+            DataTable table;
+
+            // figure out which database table to look through
+            if (userType == 1) // Admin
+            {
+                adapter = new SqlDataAdapter("SELECT * FROM Administrator", connection);
+                set = new DataSet();
+                adapter.Fill(set, "Administrator");
+                table = set.Tables["Administrator"];
+            }
+            else if (userType == 2) // Instructor
+            {
+                adapter = new SqlDataAdapter("SELECT * FROM Instructor", connection);
+                set = new DataSet();
+                adapter.Fill(set, "Instructor");
+                table = set.Tables["Instructor"];
+            }
+            else if (userType == 3) // Student
+            {
+                adapter = new SqlDataAdapter("SELECT * FROM Student", connection);
+                set = new DataSet();
+                adapter.Fill(set, "Student");
+                table = set.Tables["Student"];
+            }
+            else
+            {
+                return -1;
+            }
+
+            // check for match in username and password
+            foreach (DataRow row in table.Rows)
+            {
+                if (userName.Equals(row["UserName"].ToString(), StringComparison.OrdinalIgnoreCase) &&
+                    password.Equals(row["Password"].ToString()))
+                {
+                    return int.Parse(row["Id"].ToString());
+                }
+            }
+
+            return -1;
         }
 
         /**
          * Asks user for what type of user to login as and attempts to login with user-specified credentials.
          * Returns -1 upon choosing to quit, returns 1-3 upon success where the number specifies user type.
          */
-        static int Login()
+        /*static int Login()
         {
             int option, loginIndex;
 
@@ -89,7 +136,6 @@ namespace IzendaCourseManagementSystem
                 {
                     if (option == 4) // quit
                     {
-                        Console.WriteLine("Log in cancelled, exiting system...");
                         return -1;
                     }
                     else if (option <= 0 || option > 4)
@@ -118,6 +164,75 @@ namespace IzendaCourseManagementSystem
                         if (option == 1) { CurrentAdmin = Administrators[loginIndex]; }
                         else if (option == 2) { CurrentInstructor = Instructors[loginIndex]; }
                         else if (option == 3) { CurrentStudent = Students[loginIndex]; }
+                        //break;
+                        return option;
+                    }
+                    else
+                    {
+                        Console.Write("Invalid user name or password, would you like to try again? [Y/N]: ");
+                        string res = Console.ReadLine();
+                        if (res.Equals("Y", StringComparison.OrdinalIgnoreCase)) { continue; }
+                        else if (res.Equals("N", StringComparison.OrdinalIgnoreCase)) { System.Environment.Exit(0); }
+                        else
+                        {
+                            Console.Write("Invalid response, returning to login menu...");
+                            break;
+                        }
+                    }
+                }
+            }
+        }*/
+
+        static int Login()
+        {
+            int option, loginId;
+
+            // infinite loop to retry in case of invalid input and handle log in
+            while (true)
+            {
+                Console.WriteLine("What type of user would you like to log in as?");
+                Console.WriteLine("[Enter '1' for Administrator, '2' for Instructor, '3' for Student, '4' to quit]:");
+                if (Int32.TryParse(Console.ReadLine(), out option))
+                {
+                    if (option == 4) // quit
+                    {
+                        return -1;
+                    }
+                    else if (option <= 0 || option > 4)
+                    {
+                        Console.WriteLine("Please enter a number in the options above");
+                        continue;
+                    }
+                    // else continue to login code
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input, please try again");
+                    continue;
+                }
+
+                // login
+                while (true)
+                {
+                    Console.Write("User Name: ");
+                    string userName = Console.ReadLine();
+                    Console.Write("Password: ");
+                    string password = Console.ReadLine();
+                    loginId = CheckCredentials(userName, password, option);
+                    if (loginId != -1) // set up current user for navigation if login success
+                    {
+                        if (option == 1)
+                        {
+                            CurrentAdmin = Administrator.SearchAdministratorById(connection, loginId);
+                        }
+                        else if (option == 2)
+                        {
+                            CurrentInstructor = Administrator.SearchInstructorById(connection, loginId);
+                        }
+                        else if (option == 3)
+                        {
+                            CurrentStudent = Course.SearchStudentById(connection, loginId);
+                        }
                         //break;
                         return option;
                     }
@@ -167,7 +282,11 @@ namespace IzendaCourseManagementSystem
             Instructors[0].AssignedCourses.Add(Courses[0]);
             Instructors[1].AssignedCourses.Add(Courses[1]);
             Instructors[2].AssignedCourses.Add(Courses[2]);
-            courseGradeIdNumber = 1;
+
+            // TODO - make courseGradeIdNumber = biggest CourseGrade.Id + 1
+            courseGradeIdNumber = 5;
+
+            // TODO - after updating associateive tables, update any methods involving an INSERT into them
 
             /***** DB TESTING *****/
             connString = "Integrated Security=SSPI;Persist Security Info=False;Initial Catalog=IzendaCourseManagementSystem;Data Source=SLEE-PC";

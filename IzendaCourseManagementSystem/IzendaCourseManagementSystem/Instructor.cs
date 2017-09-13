@@ -84,6 +84,60 @@ namespace IzendaCourseManagementSystem
             return false;
         }
 
+        public bool SubmitFinalGrade(SqlConnection connection, Student selectedStudent, string letterGrade, int courseId, int creditHours, int courseGradeId)
+        {
+            if (letterGrade.Equals("A", StringComparison.OrdinalIgnoreCase) ||
+                letterGrade.Equals("B", StringComparison.OrdinalIgnoreCase) ||
+                letterGrade.Equals("C", StringComparison.OrdinalIgnoreCase) ||
+                letterGrade.Equals("D", StringComparison.OrdinalIgnoreCase) ||
+                letterGrade.Equals("F", StringComparison.OrdinalIgnoreCase))
+            {
+                // set up tools to manipulate database
+                SqlDataAdapter courseGradesAdapter = new SqlDataAdapter("SELECT * FROM CourseGrades", connection);
+                SqlDataAdapter studentAdapter = new SqlDataAdapter("SELECT * FROM Student", connection);
+                SqlCommandBuilder courseBuilder = new SqlCommandBuilder(courseGradesAdapter);
+                SqlCommandBuilder studentBuilder = new SqlCommandBuilder(studentAdapter);
+                DataSet set = new DataSet();
+                courseGradesAdapter.Fill(set, "CourseGrades");
+                studentAdapter.Fill(set, "Student");
+                
+                // TODO - multiple database actions here, consider using Transaction
+
+                // INSERT new row into CourseGrades
+                try
+                {
+                    DataRow row = set.Tables["CourseGrades"].NewRow();
+                    row["Id"] = courseGradeId;
+                    row["CourseId"] = courseId;
+                    row["FinalGrade"] = letterGrade.ToUpper();
+                    set.Tables["CourseGrades"].Rows.Add(row);
+                    courseGradesAdapter.Update(set.Tables["CourseGrades"]);
+
+                    // UPDATE Student's CreditHours if final grade is at least a 'C'
+                    if (letterGrade.ToUpper() == "A" || letterGrade.ToUpper() == "B" || letterGrade.ToUpper() == "C")
+                    {
+                        set.Tables["Student"].Constraints.Add("Id_PK", set.Tables["Student"].Columns["Id"], true);
+                        row = set.Tables["Student"].Rows.Find(selectedStudent.Id);
+                        row.BeginEdit();
+                        int newHours = int.Parse(row["CreditHours"].ToString()) + creditHours;
+                        row["CreditHours"] = newHours;
+                        row.EndEdit();
+                        studentAdapter.Update(set.Tables["Student"]);
+                    }
+
+                    // now deregister student regardless of what grade received
+                    return selectedStudent.DeregisterCourse(connection, selectedStudent.Id, courseId);
+
+                    //return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+            return false; // invalid letterGrade
+        }
+
         /// <summary>
         ///     Handles an Instructor action specified by user input from Main. Database not yet implemented,
         ///     so data comes from Lists created in Main. The check for a valid action number also done in Main.
@@ -119,12 +173,12 @@ namespace IzendaCourseManagementSystem
             else // submit final grades
             {
                 // Check for empty assigned courses list
-                if (this.AssignedCourses.Count == 0)
+                /*if (this.AssignedCourses.Count == 0)
                 {
                     Console.WriteLine("You currently have no courses assigned to you, so no final grades to submit.");
                     Console.WriteLine("-----------------------------------------------------------------------------");
                     return false;
-                }
+                }*/
 
                 Course selectedCourse;
                 Student selectedStudent;
@@ -140,7 +194,7 @@ namespace IzendaCourseManagementSystem
                     if (input.Equals("list", StringComparison.OrdinalIgnoreCase))
                     {
                         //this.ViewCourses(this.AssignedCourses);
-                        Console.WriteLine("DB needs to be implemented");
+                        this.ViewAssignedCourses(connection, this.Id);
                     }
                     else if (input.Equals("quit", StringComparison.OrdinalIgnoreCase))
                     {
@@ -151,10 +205,12 @@ namespace IzendaCourseManagementSystem
                     else if (Int32.TryParse(input, out id))
                     {
                         //int index = this.SearchAssignedCourseById(id);
-                        int index = Course.SearchCourseById(this.AssignedCourses, id);
-                        if (index >= 0)
+                        //int index = Course.SearchCourseById(this.AssignedCourses, id);
+                        //if (index >= 0)
+                        selectedCourse = Course.SearchCourseById(connection, id);
+                        if (selectedCourse != null)
                         {
-                            selectedCourse = this.AssignedCourses[index];
+                            //selectedCourse = this.AssignedCourses[index];
                             Console.WriteLine($"Course {selectedCourse.CourseName} successfully found.");
                             Console.WriteLine("-----------------------------------------------------------------------------");
                             // loop for user input on selecting a student to submit a grade for
@@ -166,7 +222,9 @@ namespace IzendaCourseManagementSystem
                                 input = Console.ReadLine();
                                 if (input.Equals("list", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    selectedCourse.ViewRegisteredStudents();
+                                    //selectedCourse.ViewRegisteredStudents();
+                                    // TODO - change this to use database
+                                    selectedCourse.ViewRegisteredStudents(connection);
                                 }
                                 else if (input.Equals("quit", StringComparison.OrdinalIgnoreCase))
                                 {
@@ -176,16 +234,18 @@ namespace IzendaCourseManagementSystem
                                 }
                                 else if (Int32.TryParse(input, out id))
                                 {
-                                    index = selectedCourse.SearchStudentById(id);
-                                    if (index >= 0)
+                                    //index = selectedCourse.SearchStudentById(id);
+                                    //if (index >= 0)
+                                    selectedStudent = Course.SearchStudentById(connection, id);
+                                    if (selectedStudent != null)
                                     {
-                                        selectedStudent = selectedCourse.RegisteredStudents[index];
+                                        //selectedStudent = selectedCourse.RegisteredStudents[index];
                                         Console.WriteLine($"Student {selectedStudent.FirstName} {selectedStudent.LastName} successfully found.");
                                         Console.WriteLine("-----------------------------------------------------------------------------");
                                         Console.Write("What letter grade would you like to give this student for this course?: ");
                                         string letterGrade = Console.ReadLine();
-                                        bool status = this.SubmitFinalGrade(selectedStudent, letterGrade, selectedCourse.Id, Program.courseGradeIdNumber);
-                                        Program.courseGradeIdNumber++; // increment just to make unique subsequent CourseGrades.Id's
+                                        bool status = this.SubmitFinalGrade(connection, selectedStudent, letterGrade, selectedCourse.Id, selectedCourse.CreditHours, Program.courseGradeIdNumber);
+                                        Program.courseGradeIdNumber++; // increment to make unique subsequent CourseGrades.Id's
                                         if (status)
                                         {
                                             Console.WriteLine($"Final Grade '{letterGrade.ToUpper()}' has been submitted to for {selectedStudent.FirstName} {selectedStudent.LastName}");
@@ -194,7 +254,7 @@ namespace IzendaCourseManagementSystem
                                         }
                                         else
                                         {
-                                            Console.WriteLine($"Failed to submit final grade '{letterGrade.ToUpper()}', please use letters A-D or F");
+                                            Console.WriteLine($"Failed to submit final grade");
                                             Console.WriteLine("-----------------------------------------------------------------------------");
                                             return false;
                                         }
