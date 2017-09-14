@@ -34,22 +34,6 @@ namespace IzendaCourseManagementSystem
          * Searches through param courses and returns the index of the course that matches param id.
          * Returns -1 if not found. Returns -2 if courses list is empty.
          */
-        public static int SearchCourseById(List<Course> courses, int id)
-        {
-            if (!courses.Any())
-            {
-                return -2;
-            }
-
-            for (int i = 0; i < courses.Count; i++)
-            {
-                if (courses[i].Id == id)
-                {
-                    return i;
-                }
-            }
-            return -1;
-        }
 
         public static Course SearchCourseById(SqlConnection connection, int id)
         {
@@ -77,17 +61,6 @@ namespace IzendaCourseManagementSystem
         /**
          * 
          */
-        public int SearchStudentById(int id)
-        {
-            for (int i = 0; i < RegisteredStudents.Count; i++)
-            {
-                if (RegisteredStudents[i].Id == id)
-                {
-                    return i;
-                }
-            }
-            return -1;
-        }
 
         public static Student SearchStudentById(SqlConnection connection, int id)
         {
@@ -114,27 +87,12 @@ namespace IzendaCourseManagementSystem
         /**
          * 
          */
-        public bool ViewRegisteredStudents()
-        {
-            if (!RegisteredStudents.Any())
-            {
-                Console.WriteLine("-----------------------------------------------------------------------------");
-                Console.WriteLine("No registered students for this course.");
-                Console.WriteLine("-----------------------------------------------------------------------------");
-                return false;
-            }
-
-            Console.WriteLine("-----------------------------------------------------------------------------");
-            for (int i = 0; i < RegisteredStudents.Count; i++)
-            {
-                Console.WriteLine(RegisteredStudents[i]);
-            }
-            Console.WriteLine("-----------------------------------------------------------------------------");
-            return true;
-        }
+        
 
         public bool ViewRegisteredStudents(SqlConnection connection)
         {
+            // TODO - check if table is empty for better user response
+
             // SELECT only the students registered for the specified course
             try
             {

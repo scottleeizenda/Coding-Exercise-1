@@ -11,15 +11,18 @@ namespace IzendaCourseManagementSystem
     class Program
     {
         // Declarations
-        static List<Instructor> Instructors;
+        /*static List<Instructor> Instructors;
         static List<Student> Students;
         static List<Administrator> Administrators;
-        static List<Course> Courses;
+        static List<Course> Courses;*/
         static Administrator CurrentAdmin;
         static Instructor CurrentInstructor;
         static Student CurrentStudent;
 
         public static int courseGradeIdNumber;
+        public static int assignInstructorIdNumber;
+        public static int registerCourseIdNumber;
+        //public static int studentFinalGradeIdNumber;
         public static string connString;
         public static SqlConnection connection;
 
@@ -27,52 +30,10 @@ namespace IzendaCourseManagementSystem
          * TODO - make all user's ViewCourses method have the option to view a specific course, category of Courses, or list all Courses
          */
         //public static bool ViewSelectCourses()
-
-        /**
-         * 
-         */
-        /*static int CheckCredentials(string userName, string password, int userType)
-        {
-            if (userType == 1) // Admin
-            {
-                for (int i = 0; i < Administrators.Count; i++)
-                {
-                    if (userName.Equals(Administrators[i].UserName, StringComparison.OrdinalIgnoreCase) &&
-                        password.Equals(Administrators[i].Password))
-                    {
-                        return i;
-                    }
-                }
-                return -1;
-            }
-            else if (userType == 2) // Instructor
-            {
-                for (int i = 0; i < Instructors.Count; i++)
-                {
-                    if (userName.Equals(Instructors[i].UserName, StringComparison.OrdinalIgnoreCase) &&
-                        password.Equals(Instructors[i].Password))
-                    {
-                        return i;
-                    }
-                }
-                return -1;
-            }
-            else if (userType == 3) // Student
-            {
-                for (int i = 0; i < Students.Count; i++)
-                {
-                    if (userName.Equals(Students[i].UserName, StringComparison.OrdinalIgnoreCase) &&
-                        password.Equals(Students[i].Password))
-                    {
-                        return i;
-                    }
-                }
-                return -1;
-            }
-
-            return -1;
-        }*/
-
+        
+        /// <summary>
+        /// 
+        /// </summary>
         static int CheckCredentials(string userName, string password, int userType)
         {
             SqlDataAdapter adapter;
@@ -123,66 +84,9 @@ namespace IzendaCourseManagementSystem
          * Asks user for what type of user to login as and attempts to login with user-specified credentials.
          * Returns -1 upon choosing to quit, returns 1-3 upon success where the number specifies user type.
          */
-        /*static int Login()
-        {
-            int option, loginIndex;
-
-            // infinite loop to retry in case of invalid input and handle log in
-            while (true)
-            {
-                Console.WriteLine("What type of user would you like to log in as?");
-                Console.WriteLine("[Enter '1' for Administrator, '2' for Instructor, '3' for Student, '4' to quit]:");
-                if (Int32.TryParse(Console.ReadLine(), out option))
-                {
-                    if (option == 4) // quit
-                    {
-                        return -1;
-                    }
-                    else if (option <= 0 || option > 4)
-                    {
-                        Console.WriteLine("Please enter a number in the options above");
-                        continue;
-                    }
-                    // else continue to login code
-                }
-                else
-                {
-                    Console.WriteLine("Invalid input, please try again");
-                    continue;
-                }
-
-                // login
-                while (true)
-                {
-                    Console.Write("User Name: ");
-                    string userName = Console.ReadLine();
-                    Console.Write("Password: ");
-                    string password = Console.ReadLine();
-                    loginIndex = CheckCredentials(userName, password, option);
-                    if (loginIndex >= 0) // set up current user for navigation
-                    {
-                        if (option == 1) { CurrentAdmin = Administrators[loginIndex]; }
-                        else if (option == 2) { CurrentInstructor = Instructors[loginIndex]; }
-                        else if (option == 3) { CurrentStudent = Students[loginIndex]; }
-                        //break;
-                        return option;
-                    }
-                    else
-                    {
-                        Console.Write("Invalid user name or password, would you like to try again? [Y/N]: ");
-                        string res = Console.ReadLine();
-                        if (res.Equals("Y", StringComparison.OrdinalIgnoreCase)) { continue; }
-                        else if (res.Equals("N", StringComparison.OrdinalIgnoreCase)) { System.Environment.Exit(0); }
-                        else
-                        {
-                            Console.Write("Invalid response, returning to login menu...");
-                            break;
-                        }
-                    }
-                }
-            }
-        }*/
-
+        /// <summary>
+        /// 
+        /// </summary>
         static int Login()
         {
             int option, loginId;
@@ -255,7 +159,7 @@ namespace IzendaCourseManagementSystem
         static void Main(string[] args)
         {
             // Initializations of default users and Courses (for now)
-
+            /*
             Instructors = new List<Instructor>();
             Students = new List<Student>();
             Administrators = new List<Administrator>();
@@ -282,33 +186,46 @@ namespace IzendaCourseManagementSystem
             Instructors[0].AssignedCourses.Add(Courses[0]);
             Instructors[1].AssignedCourses.Add(Courses[1]);
             Instructors[2].AssignedCourses.Add(Courses[2]);
+            
+            //courseGradeIdNumber = 6;
+            //assignInstructorIdNumber = 4;
+            //registerCourseIdNumber = 3;
+            //studentFinalGradeIdNumber = 5;*/
 
-            // TODO - make courseGradeIdNumber = biggest CourseGrade.Id + 1
-            courseGradeIdNumber = 5;
 
-            // TODO - after updating associateive tables, update any methods involving an INSERT into them
-
-            /***** DB TESTING *****/
+            /***** Set up Database Tools and ID number generation *****/
             connString = "Integrated Security=SSPI;Persist Security Info=False;Initial Catalog=IzendaCourseManagementSystem;Data Source=SLEE-PC";
             connection = new SqlConnection(connString);
             connection.Open();
-            Console.WriteLine("Database Connection Successful!");
-            Administrator admin2 = new Administrator(2, "admin", "2", DateTime.Now, "admin2", "AdminTwo");
-            //admin2.ViewCoursesDB(connection);
-            string[] fields = { "10001301", "08/14/2017", "12/05/2017", "4", "CSCI1301", "Intro to Java Programming" };
-            //admin2.CreateCourseDB(connection, fields);
-            //Console.WriteLine("-----------------------------------------------------------------------------");
-            //Console.WriteLine(Course.SearchCourseByIdDB(connection, 10001301));
-            fields[5] = "Introduction to Java Programming";
-            //Console.WriteLine(admin2.UpdateCourseDB(connection, 10001301, fields));
-            //Console.WriteLine(admin2.DeleteCourseDB(connection, 10001301));
+            //Console.WriteLine("Database Connection Successful!");
+            SqlDataAdapter courseGradesIdAdapter = new SqlDataAdapter("SELECT MAX(Id) AS MostRecentId FROM CourseGrades", connection);
+            SqlDataAdapter assignInstructorIdAdapter = new SqlDataAdapter("SELECT MAX(Id) AS MostRecentId FROM Instructor_Course", connection);
+            SqlDataAdapter registerCourseIdAdapter = new SqlDataAdapter("SELECT MAX(Id) AS MostRecentId FROM Student_Course", connection);
+            DataSet set = new DataSet();
+            courseGradesIdAdapter.Fill(set, "CourseGradesMaxId");
+            assignInstructorIdAdapter.Fill(set, "Instructor_CourseMaxId");
+            registerCourseIdAdapter.Fill(set, "Student_CourseMaxId");
+            // set current courseGradeIdNumber to work up from
+            DataTable table = set.Tables["CourseGradesMaxId"];
+            DataRow row = table.Rows[0];
+            courseGradeIdNumber = int.Parse(row["MostRecentId"].ToString()) + 1;
+            // set current assignInstructorIdNumber to work up from
+            table = set.Tables["Instructor_CourseMaxId"];
+            row = table.Rows[0];
+            assignInstructorIdNumber = int.Parse(row["MostRecentId"].ToString()) + 1;
+            // set current registerCourseIdNumber to work up from
+            table = set.Tables["Student_CourseMaxId"];
+            row = table.Rows[0];
+            registerCourseIdNumber = int.Parse(row["MostRecentId"].ToString()) + 1;
 
+            Console.WriteLine($"{courseGradeIdNumber}, {assignInstructorIdNumber}, {registerCourseIdNumber}");
 
             /****** Start of the text-based user interactions ******/
             Console.WriteLine("=============================================================");
             Console.WriteLine("||     Welcome to the Izenda Course Management System!     ||");
             Console.WriteLine("=============================================================");
             int option, action;
+            bool actionStatus;
             // loop to allow log in as a different user upon one logging out
             while (true)
             {
@@ -341,8 +258,7 @@ namespace IzendaCourseManagementSystem
                         {
                             if (action >= 1 && action <= 5)
                             {
-                                // TODO - store status and add error mesage in the case of "false"
-                                CurrentAdmin.AdminActionHandler(connection, action);
+                                actionStatus = CurrentAdmin.AdminActionHandler(connection, action);
                             }
                             else if (action == 6)
                             {
@@ -377,8 +293,7 @@ namespace IzendaCourseManagementSystem
                         {
                             if (action >= 1 && action <= 3)
                             {
-                                // TODO - store status and add error mesage in the case of "false"
-                                CurrentInstructor.InstructorActionHandler(Courses, connection, action);
+                                actionStatus = CurrentInstructor.InstructorActionHandler(connection, action);
                             }
                             else if (action == 4)
                             {
@@ -416,8 +331,7 @@ namespace IzendaCourseManagementSystem
                         {
                             if (action >= 1 && action <= 6)
                             {
-                                // TODO - store status and add error mesage in the case of "false"
-                                CurrentStudent.StudentActionHandler(Courses, connection, action);
+                                actionStatus = CurrentStudent.StudentActionHandler(connection, action);
                             }
                             else if (action == 7)
                             {

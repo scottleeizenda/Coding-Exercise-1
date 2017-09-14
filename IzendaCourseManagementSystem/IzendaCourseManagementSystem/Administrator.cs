@@ -187,6 +187,8 @@ namespace IzendaCourseManagementSystem
         {
             try
             {
+                // TODO - decide how to handle deletion of Course with foreign key references to it
+
                 SqlDataAdapter adapter = new SqlDataAdapter("SELECT * FROM Course", connection);
                 SqlCommandBuilder builder = new SqlCommandBuilder(adapter);
                 DataSet set = new DataSet();
@@ -194,7 +196,7 @@ namespace IzendaCourseManagementSystem
                 set.Tables["Course"].Constraints.Add("Id_PK", set.Tables["Course"].Columns["Id"], true);
                 set.Tables["Course"].Rows.Find(courseId).Delete();
                 adapter.Update(set.Tables["Course"]);
-
+                
                 return true;
             }
             catch
@@ -299,6 +301,8 @@ namespace IzendaCourseManagementSystem
             DataSet set = new DataSet();
             adapter.Fill(set, "Instructor_Course");
             DataRow row = set.Tables["Instructor_Course"].NewRow();
+            row["Id"] = Program.assignInstructorIdNumber;
+            Program.assignInstructorIdNumber++;
             row["InstructorId"] = selectedInstructor.Id;
             row["CourseId"] = selectedCourse.Id;
             try
@@ -439,7 +443,18 @@ namespace IzendaCourseManagementSystem
                         if (choice.Equals("Y", StringComparison.OrdinalIgnoreCase) || choice.Equals("Yes", StringComparison.OrdinalIgnoreCase))
                         {
                             bool status = this.DeleteCourse(connection, id);
-                            Console.WriteLine($"Successfully deleted course with ID {id}");
+                            if (status)
+                            {
+                                Console.WriteLine($"Successfully deleted course with ID {id}");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Failed to delete course with ID {id}.");
+                                Console.WriteLine("Some reasons may be:");
+                                Console.WriteLine("1) An Instructor is still assigned to teach this course.");
+                                Console.WriteLine("2) Student(s) have a CourseGrade for this course.");
+                                Console.WriteLine("3) Student(s) are currently registered for this course.");
+                            }
                             Console.WriteLine("-----------------------------------------------------------------------------");
                             return status;
                         }
@@ -526,6 +541,7 @@ namespace IzendaCourseManagementSystem
                                         if (status)
                                         {
                                             Console.WriteLine($"Instructor {selectedInstructor.FirstName} {selectedInstructor.LastName} has been assigned to teach course {selectedCourse.CourseName}");
+                                            Program.assignInstructorIdNumber++;
                                             Console.WriteLine("-----------------------------------------------------------------------------");
                                             return true;
                                         }

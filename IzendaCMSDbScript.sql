@@ -53,18 +53,21 @@ CREATE TABLE CourseGrades
 
 CREATE TABLE Instructor_Course
 (
+	Id int PRIMARY KEY NOT NULL,
 	InstructorId int FOREIGN KEY REFERENCES Instructor(Id) NOT NULL,
-	CourseId int FOREIGN KEY REFERENCES Course(Id) NOT NULL,
+	CourseId int FOREIGN KEY REFERENCES Course(Id) NOT NULL
 )
 
 CREATE TABLE Student_CourseGrades
 (
+	Id int PRIMARY KEY NOT NULL,
 	StudentId int FOREIGN KEY REFERENCES Student(Id) NOT NULL,
 	CourseGradesId int FOREIGN KEY REFERENCES CourseGrades(Id) NOT NULL
 )
 
 CREATE TABLE Student_Course
 (
+	Id int PRIMARY KEY NOT NULL,
 	StudentId int FOREIGN KEY REFERENCES Student(Id) NOT NULL,
 	CourseId int FOREIGN KEY REFERENCES Course(Id) NOT NULL
 )
@@ -102,9 +105,9 @@ INSERT INTO CourseGrades (Id, CourseId, FinalGrade) VALUES (2, 10001302, 'A');
 INSERT INTO CourseGrades (Id, CourseId, FinalGrade) VALUES (3, 10001730, 'A');
 INSERT INTO CourseGrades (Id, CourseId, FinalGrade) VALUES (4, 10002670, 'A');
 
-INSERT INTO Student_CourseGrades (StudentId, CourseGradesId) VALUES (5000, 1);
-INSERT INTO Student_CourseGrades (StudentId, CourseGradesId) VALUES (5001, 2);
-INSERT INTO Student_CourseGrades (StudentId, CourseGradesId) VALUES (5001, 3);
-INSERT INTO Student_CourseGrades (StudentId, CourseGradesId) VALUES (5001, 4);
+INSERT INTO Student_CourseGrades (Id, StudentId, CourseGradesId) VALUES (1, 5000, 1);
+INSERT INTO Student_CourseGrades (Id, StudentId, CourseGradesId) VALUES (2, 5001, 2);
+INSERT INTO Student_CourseGrades (Id, StudentId, CourseGradesId) VALUES (3, 5001, 3);
+INSERT INTO Student_CourseGrades (Id, StudentId, CourseGradesId) VALUES (4, 5001, 4);
 
-INSERT INTO Student_Course (StudentId, CourseId) VALUES (5000, 10001730);
+INSERT INTO Student_Course (Id, StudentId, CourseId) VALUES (1, 5000, 10001730);

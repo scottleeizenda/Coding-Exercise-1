@@ -54,26 +54,41 @@ namespace IzendaCourseManagementSystem
                 return null;
             }
         }
-
-        /**
-         * Displays all CourseGrades the student has earned.
-         * If the list is empty, returns false. Otherwise, successfully displays and returns true.
-         * BEWARE, NO PARAMS PASSED IN. Maybe think about restructuring later.
-         */
-        public bool ViewFinalGrades()
+        
+        /// <summary>
+        ///     Displays all CourseGrades the student has earned. Accesses this information through an INNER JOIN query with
+        ///     the CourseGrades and Student_CourseGrades tables. Returns true if successfully displays. Otherwise, returns false.
+        /// </summary>
+        public bool ViewFinalGrades(SqlConnection connection)
         {
-            if (!FinalGrades.Any())
+            // TODO - check if table is empty for better user response
+            
+            try
+            {
+
+                string query = "SELECT CourseGrades.CourseId, CourseGrades.FinalGrade, Student_CourseGrades.StudentId FROM CourseGrades " +
+                              $"INNER JOIN Student_CourseGrades ON CourseGrades.Id = Student_CourseGrades.CourseGradesId WHERE Student_CourseGrades.StudentId = {this.Id}";
+                SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
+                DataSet set = new DataSet();
+                adapter.Fill(set, "Student_CourseGrades_JOIN");
+                DataTable table = set.Tables["Student_CourseGrades_JOIN"];
+
+                Console.WriteLine("-----------------------------------------------------------------------------");
+                foreach (DataRow row in table.Rows)
+                {
+                    // TODO - Lookup and show Course information from CourseId
+                    int currentCourseId = int.Parse(row["CourseId"].ToString());
+                    Course currentCourse = Course.SearchCourseById(connection, currentCourseId);
+                    Console.WriteLine($"{currentCourse.CourseName} --> {row["FinalGrade"]}");
+                }
+                Console.WriteLine("-----------------------------------------------------------------------------");
+
+                return true;
+            }
+            catch
             {
                 return false;
             }
-
-            Console.WriteLine("-----------------------------------------------------------------------------");
-            foreach (CourseGrades cg in FinalGrades)
-            {
-                Console.WriteLine(cg);
-            }
-            Console.WriteLine("-----------------------------------------------------------------------------");
-            return true;
         }
 
         /// <summary>
@@ -83,6 +98,8 @@ namespace IzendaCourseManagementSystem
         /// </summary>
         public bool ViewRegisteredCourses(SqlConnection connection)
         {
+            // TODO - check for empty table for better user response
+
             // SELECT only the courses the specified Instructor teaches
             try
             {
@@ -109,52 +126,71 @@ namespace IzendaCourseManagementSystem
         }
 
         /// <summary>
-        ///     Adds Course courseToRegister param to the Student's RegisteredCourses List. Courses that a Student
-        ///     is already registered for or already completed will not be added.
-        ///     Returns 1 upon success, -1 if duplicate course in RegisteredCourses, -2 if course already completed.
+        ///     Adds the Course specified by the param courseId to the Student_Course table. Courses that a Student is already registered
+        ///     for or already completed will not be added. Returns 1 upon success, -1 if duplicate course in RegisteredCourses, -2 if
+        ///     course already completed, -3 if a database command went wrong.
         /// </summary>
-        public int RegisterCourse(Course courseToRegister)
+        public int RegisterCourse(SqlConnection connection, int courseId)
         {
-            // Check if already registered for param course
-            for (int i = 0; i < RegisteredCourses.Count; i++)
+            // TODO - consider improvement by allowing student to take course again if student made below a 'C'
+            
+            try
             {
-                if (courseToRegister.Id == RegisteredCourses[i].Id)
+                // Check if student is already registered for this course
+                SqlDataAdapter checkAdapter = new SqlDataAdapter($"SELECT StudentId, CourseId FROM Student_Course WHERE StudentId = {this.Id}", connection);
+                SqlCommandBuilder checkBuilder = new SqlCommandBuilder(checkAdapter);
+                DataSet checkSet = new DataSet();
+                checkAdapter.Fill(checkSet, "RegisteredCourses");
+                DataTable checkTable = checkSet.Tables["RegisteredCourses"];
+                foreach (DataRow dr in checkTable.Rows)
                 {
-                    return -1;
+                    if (int.Parse(dr["CourseId"].ToString()) == courseId)
+                    {
+                        return -1;
+                    }
                 }
-            }
 
-            // Check if already taken the param course
-            // TODO - improve by allowing student to take course again if student made below a 'C'
-            for (int i = 0; i < FinalGrades.Count; i++)
+                // Check if student has already taken this course
+                string query = "SELECT CourseGrades.CourseId, CourseGrades.FinalGrade, Student_CourseGrades.StudentId FROM CourseGrades " +
+                              $"INNER JOIN Student_CourseGrades ON CourseGrades.Id = Student_CourseGrades.CourseGradesId WHERE Student_CourseGrades.StudentId = {this.Id}";
+                checkAdapter = new SqlDataAdapter(query, connection);
+                checkBuilder = new SqlCommandBuilder(checkAdapter);
+                checkAdapter.Fill(checkSet, "Student_CourseGrades_JOIN");
+                checkTable = checkSet.Tables["Student_CourseGrades_JOIN"];
+                foreach (DataRow dr in checkTable.Rows)
+                {
+                    if (int.Parse(dr["CourseId"].ToString()) == courseId)
+                    {
+                        return -2;
+                    }
+                }
+
+                // Otherwise, good to register for course by inserting new row
+                SqlDataAdapter adapter = new SqlDataAdapter("SELECT * FROM Student_Course", connection);
+                SqlCommandBuilder builder = new SqlCommandBuilder(adapter);
+                DataSet set = new DataSet();
+                adapter.Fill(set, "Student_Course");
+                
+                DataRow row = set.Tables["Student_Course"].NewRow();
+                row["Id"] = Program.registerCourseIdNumber;
+                Program.registerCourseIdNumber++;
+                row["StudentId"] = this.Id;
+                row["CourseId"] = courseId;
+                set.Tables["Student_Course"].Rows.Add(row);
+                adapter.Update(set.Tables[0]);
+
+                return 1;
+            }
+            catch
             {
-                if (courseToRegister.Id == FinalGrades[i].CourseId)
-                {
-                    return -2;
-                }
+                return -3;
             }
-
-            // Otherwise, good to register for course
-            RegisteredCourses.Add(courseToRegister);
-            return 1;
         }
-        
+
         /// <summary>
-        ///     Removes the Course specified in the params to the RegisteredCourses list. Also updates RegisteredStudents list
-        ///     in Course. Check for valid course and index done before this method call.
+        ///     Removes the Course specified by the courseId param from the Student_Course table. 
+        ///     Check for valid course and index done before this method call.
         /// </summary>
-        public bool DeregisterCourse(int index)
-        {
-            // first deregister student from RegisteredStudents list in Course
-            Course courseToDeregister = this.RegisteredCourses[index];
-            int studentIndex = courseToDeregister.SearchStudentById(this.Id);
-            courseToDeregister.RegisteredStudents.RemoveAt(studentIndex);
-
-            // now remove course from RegisteredCourses list in this Student
-            RegisteredCourses.RemoveAt(index);
-            return true;
-        }
-
         public bool DeregisterCourse(SqlConnection connection, int studentId, int courseId)
         {
             try
@@ -163,33 +199,22 @@ namespace IzendaCourseManagementSystem
                 SqlCommandBuilder builder = new SqlCommandBuilder(adapter);
                 DataSet set = new DataSet();
                 adapter.Fill(set, "Student_Course");
-                set.Tables["Student_Course"].Constraints.Add("CourseId_PK", set.Tables["Student_Course"].Columns["CourseId"], true);
-                set.Tables["Student_Course"].Rows.Find(courseId).Delete();
-                adapter.Update(set.Tables["Student_Course"]);
-
-                // TODO - change DB assocation tables to have PK Id to complete above action
-                //        Then add a means to keep track of subsequent Id's like the CourseGrades Id
-
-                //DataTable table = set.Tables["Student_Course"];
-
-                /*DataRow row = table.Rows[0];
-                Console.Write($"{row["StudentID"].ToString()}, {row["CourseId"].ToString()}");
-                row.Delete();
-                adapter.Update(set.Tables["Student_Course"]);
-                */
+                set.Tables["Student_Course"].Constraints.Add("Id_PK", set.Tables["Student_Course"].Columns["Id"], true);
+                DataTable table = set.Tables["Student_Course"];
                 
-                /*int currentCourseId;
+                int currentCourseId;
                 foreach (DataRow row in table.Rows)
                 {
                     currentCourseId = int.Parse(row["CourseId"].ToString());
                     // if traversing CourseId == CourseId of the course to deregister
                     if (currentCourseId == courseId)
                     {
-                        row.Delete();
+                        int id = int.Parse(row["Id"].ToString());
+                        set.Tables["Student_Course"].Rows.Find(id).Delete();
                         adapter.Update(set.Tables["Student_Course"]);
                         break;
                     }
-                }*/
+                }
 
                 return true;
             }
@@ -233,7 +258,7 @@ namespace IzendaCourseManagementSystem
         /// <param name="courses">List of all existing courses</param>
         /// <param name="action">Number to represent what course of action for a Student to take</param>
         /// <returns>True/False of whether the action has been completed or not</returns>
-        public bool StudentActionHandler(List<Course> courses, SqlConnection connection, int action)
+        public bool StudentActionHandler(SqlConnection connection, int action)
         {
             if (action == 1) // view courses
             {
@@ -270,7 +295,7 @@ namespace IzendaCourseManagementSystem
                 // TODO - show grades in more detail, currently only shows course ID with final grade.
                 //        Preferrably have it show course name and ID.
 
-                bool status = this.ViewFinalGrades();
+                bool status = this.ViewFinalGrades(connection);
                 if (!status)
                 {
                     Console.WriteLine("-----------------------------------------------------------------------------");
@@ -287,15 +312,15 @@ namespace IzendaCourseManagementSystem
                 // make sure the inputted id is an int
                 if (Int32.TryParse(Console.ReadLine(), out id))
                 {
-                    int index = Course.SearchCourseById(courses, id);
-                    if (index >= 0)
+                    Course selectedCourse = Course.SearchCourseById(connection, id);
+                    if (selectedCourse != null)
                     {
-                        Console.WriteLine($"Course Successfully Found, adding this course to your registered courses:\n{courses[index]}");
-                        int status = this.RegisterCourse(courses[index]);
+                        Console.WriteLine($"Course Successfully Found, adding this course to your registered courses:\n{selectedCourse}");
+                        int status = this.RegisterCourse(connection, selectedCourse.Id);
                         if (status == 1)
                         {
                             Console.WriteLine("Course successfully registered.");
-                            courses[index].RegisteredStudents.Add(this); // also add student to RegisteredStudents list in Course
+                            Program.registerCourseIdNumber++;
                             Console.WriteLine("-----------------------------------------------------------------------------");
                             return true;
                         }
@@ -307,6 +332,11 @@ namespace IzendaCourseManagementSystem
                         else if (status == -2)
                         {
                             Console.WriteLine("You have already completed this course!");
+                            Console.WriteLine("-----------------------------------------------------------------------------");
+                        }
+                        else if (status == -3)
+                        {
+                            Console.WriteLine("Database error, failed to register for course.");
                             Console.WriteLine("-----------------------------------------------------------------------------");
                         }
                         return false;
@@ -327,24 +357,25 @@ namespace IzendaCourseManagementSystem
             }
             else // deregister course
             {
-                if (this.RegisteredCourses.Count == 0)
+                // TODO - check for empty Student_Course table for specific student
+                /*if (this.RegisteredCourses.Count == 0)
                 {
                     Console.WriteLine("-----------------------------------------------------------------------------");
                     Console.WriteLine("You are not currently registered for any courses");
                     Console.WriteLine("-----------------------------------------------------------------------------");
                     return false;
-                }
+                }*/
                 Console.WriteLine("-----------------------------------------------------------------------------");
                 Console.Write("Enter the ID of the course you would like to deregister: ");
                 int id;
                 // make sure the inputted id is an int
                 if (Int32.TryParse(Console.ReadLine(), out id))
                 {
-                    int index = Course.SearchCourseById(this.RegisteredCourses, id); // index for RegisteredCourses list in Student
-                    if (index >= 0)
+                    Course selectedCourse = Course.SearchCourseById(connection, id);
+                    if (selectedCourse != null)
                     {
-                        Console.WriteLine($"Course Successfully Found, removing this course from your registered courses:\n{courses[index]}");
-                        bool status = this.DeregisterCourse(index);
+                        Console.WriteLine($"Course Successfully Found, removing this course from your registered courses:\n{selectedCourse}");
+                        bool status = this.DeregisterCourse(connection, this.Id, id);
                         if (status)
                         {
                             Console.WriteLine("Course successfully deregistered.");
