@@ -99,6 +99,12 @@ INSERT INTO Course (Id, StartDate, EndDate, CreditHours, CourseName, CourseDescr
 VALUES (10002720, '2017-08-14', '2017-12-05', 4, 'CSCI2720', 'Data Structures');
 INSERT INTO Course (Id, StartDate, EndDate, CreditHours, CourseName, CourseDescription)
 VALUES (10003030, '2017-08-14', '2017-12-05', 3, 'CSCI3030', 'Computer Ethics');
+INSERT INTO Course (Id, StartDate, EndDate, CreditHours, CourseName, CourseDescription)
+VALUES (10014600, '2017-08-14', '2017-12-05', 3, 'MIST4600', 'Computer Programming in Business');
+INSERT INTO Course (Id, StartDate, EndDate, CreditHours, CourseName, CourseDescription)
+VALUES (10014620, '2017-08-14', '2017-12-05', 3, 'MIST4620', 'Systems Analysis and Design');
+INSERT INTO Course (Id, StartDate, EndDate, CreditHours, CourseName, CourseDescription)
+VALUES (10015620, '2017-08-14', '2017-12-05', 3, 'MIST5620', 'Business Intelligence');
 
 INSERT INTO CourseGrades (Id, CourseId, FinalGrade) VALUES (1, 10001302, 'B');
 INSERT INTO CourseGrades (Id, CourseId, FinalGrade) VALUES (2, 10001302, 'A');

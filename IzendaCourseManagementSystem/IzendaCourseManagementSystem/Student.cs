@@ -57,49 +57,54 @@ namespace IzendaCourseManagementSystem
         
         /// <summary>
         ///     Displays all CourseGrades the student has earned. Accesses this information through an INNER JOIN query with
-        ///     the CourseGrades and Student_CourseGrades tables. Returns true if successfully displays. Otherwise, returns false.
+        ///     the CourseGrades and Student_CourseGrades tables. Returns the number of rows if successfully displays, or
+        ///     returns 0 without displaying anything if table is empty. Otherwise, returns -1 if a database operation goes wrong.
         /// </summary>
-        public bool ViewFinalGrades(SqlConnection connection)
+        public int ViewFinalGrades(SqlConnection connection)
         {
-            // TODO - check if table is empty for better user response
-            
             try
             {
-
                 string query = "SELECT CourseGrades.CourseId, CourseGrades.FinalGrade, Student_CourseGrades.StudentId FROM CourseGrades " +
                               $"INNER JOIN Student_CourseGrades ON CourseGrades.Id = Student_CourseGrades.CourseGradesId WHERE Student_CourseGrades.StudentId = {this.Id}";
                 SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
                 DataSet set = new DataSet();
                 adapter.Fill(set, "Student_CourseGrades_JOIN");
                 DataTable table = set.Tables["Student_CourseGrades_JOIN"];
+                int numRows = table.Rows.Count;
 
+                // Check if table is empty
+                if (numRows == 0)
+                {
+                    return 0;
+                }
+
+                // Otherwise display all rows
                 Console.WriteLine("-----------------------------------------------------------------------------");
                 foreach (DataRow row in table.Rows)
                 {
-                    // TODO - Lookup and show Course information from CourseId
+                    // Lookup and show Course information from CourseId
                     int currentCourseId = int.Parse(row["CourseId"].ToString());
                     Course currentCourse = Course.SearchCourseById(connection, currentCourseId);
                     Console.WriteLine($"{currentCourse.CourseName} --> {row["FinalGrade"]}");
                 }
                 Console.WriteLine("-----------------------------------------------------------------------------");
 
-                return true;
+                return numRows;
             }
             catch
             {
-                return false;
+                return -1;
             }
         }
 
         /// <summary>
         ///     Displays the Courses that a Student is registered for through the Student_Course table.
         ///     SELECT's and shows only the Courses for the specified Student from the calling object.
-        ///     Returns true upon successfully displaying. Otherwise, returns false if anything goes wrong.
+        ///     Returns the number of rows if successfully displays, or returns 0 without displaying
+        ///     anything if table is empty. Otherwise, returns -1 if a database operation goes wrong.
         /// </summary>
-        public bool ViewRegisteredCourses(SqlConnection connection)
+        public int ViewRegisteredCourses(SqlConnection connection)
         {
-            // TODO - check for empty table for better user response
-
             // SELECT only the courses the specified Instructor teaches
             try
             {
@@ -107,6 +112,13 @@ namespace IzendaCourseManagementSystem
                 DataSet set = new DataSet();
                 adapter.Fill(set, "Student_Course");
                 DataTable table = set.Tables["Student_Course"];
+                int numRows = table.Rows.Count;
+
+                // Check if table is empty
+                if (numRows == 0)
+                {
+                    return 0;
+                }
 
                 Console.WriteLine("-----------------------------------------------------------------------------");
                 foreach (DataRow row in table.Rows)
@@ -117,11 +129,11 @@ namespace IzendaCourseManagementSystem
                 }
                 Console.WriteLine("-----------------------------------------------------------------------------");
 
-                return true;
+                return numRows;
             }
             catch
             {
-                return false;
+                return -1;
             }
         }
 
@@ -262,7 +274,6 @@ namespace IzendaCourseManagementSystem
         {
             if (action == 1) // view courses
             {
-                //bool status = this.ViewCourses(courses);
                 bool status = this.ViewCourses(connection);
                 if (!status)
                 {
@@ -274,14 +285,23 @@ namespace IzendaCourseManagementSystem
             }
             else if (action == 2) // view registered
             {
-                bool status = this.ViewRegisteredCourses(connection);
-                if (!status)
+                int status = this.ViewRegisteredCourses(connection);
+                if (status == 0)
                 {
                     Console.WriteLine("-----------------------------------------------------------------------------");
                     Console.WriteLine("You are not currently registered for any courses.");
                     Console.WriteLine("-----------------------------------------------------------------------------");
+                    return true;
                 }
-                return status;
+                else if (status == -1)
+                {
+                    Console.WriteLine("-----------------------------------------------------------------------------");
+                    Console.WriteLine("Failed to display registered courses.");
+                    Console.WriteLine("-----------------------------------------------------------------------------");
+                    return false;
+                }
+                // else registered courses have successfully displayed
+                return true;
             }
             else if (action == 3) // view info
             {
@@ -292,17 +312,23 @@ namespace IzendaCourseManagementSystem
             }
             else if (action == 4) // view grades
             {
-                // TODO - show grades in more detail, currently only shows course ID with final grade.
-                //        Preferrably have it show course name and ID.
-
-                bool status = this.ViewFinalGrades(connection);
-                if (!status)
+                int status = this.ViewFinalGrades(connection);
+                if (status == 0)
                 {
                     Console.WriteLine("-----------------------------------------------------------------------------");
                     Console.WriteLine("You have not completed any courses.");
                     Console.WriteLine("-----------------------------------------------------------------------------");
+                    return true;
                 }
-                return status;
+                else if (status == -1)
+                {
+                    Console.WriteLine("-----------------------------------------------------------------------------");
+                    Console.WriteLine("Failed to display grades.");
+                    Console.WriteLine("-----------------------------------------------------------------------------");
+                    return false;
+                }
+                // else grades have successfully displayed
+                return true;
             }
             else if (action == 5) // register course
             {

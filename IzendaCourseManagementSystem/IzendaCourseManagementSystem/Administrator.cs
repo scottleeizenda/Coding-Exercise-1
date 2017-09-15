@@ -293,8 +293,8 @@ namespace IzendaCourseManagementSystem
         /// </summary>
         public bool AssignInstructor(SqlConnection connection, Course selectedCourse, Instructor selectedInstructor)
         {
-            // TODO - Prevent any duplicate entries? May not be necessary if Instructor is allowed to teach multiple
-            //        classes of the same Course.
+            // TODO? - Prevent any duplicate entries? May not be necessary if Instructor is allowed to teach multiple
+            //         classes of the same Course.
 
             SqlDataAdapter adapter = new SqlDataAdapter("SELECT * FROM Instructor_Course", connection);
             SqlCommandBuilder builder = new SqlCommandBuilder(adapter);
@@ -364,13 +364,69 @@ namespace IzendaCourseManagementSystem
             }
             else if (action == 2) // view courses
             {
-                bool status = this.ViewCourses(connection);
+                /*bool status = this.ViewCourses(connection);
                 if (!status)
                 {
                     Console.WriteLine("There are currently no existing courses.");
                     Console.WriteLine("-----------------------------------------------------------------------------");
                 }
-                return status;
+                return status;*/
+
+                while (true)
+                {
+                    Console.WriteLine("-----------------------------------------------------------------------------");
+                    Console.WriteLine("[Enter '1' to view all existing courses]");
+                    Console.WriteLine("[Enter '2' to view all existing courses under a given course prefix]");
+                    Console.WriteLine("[Enter '3' to search for a specific course by ID]");
+                    Console.WriteLine("[Enter '4' to go back to main menu]:");
+                    int input;
+                    if (Int32.TryParse(Console.ReadLine(), out input))
+                    {
+                        if (input == 1)
+                        {
+                            this.ViewCourses(connection);
+                            break;
+                        }
+                        else if (input == 2)
+                        {
+                            Console.WriteLine("-----------------------------------------------------------------------------");
+                            Console.Write("Enter the Course prefix you would like to search for: ");
+                            string prefix = Console.ReadLine();
+                            int status = this.ViewCourses(connection, prefix);
+                            // show message for each status
+                        }
+                        else if (input == 3)
+                        {
+                            Console.WriteLine("-----------------------------------------------------------------------------");
+                            Console.Write("Enter the ID of the course you would like to look up: ");
+                            int courseId;
+                            if (Int32.TryParse(Console.ReadLine(), out courseId))
+                            {
+                                Console.WriteLine(Course.SearchCourseById(connection, courseId));
+                            }
+                            else
+                            {
+                                Console.WriteLine("Invalid ID input");
+                                continue;
+                            }
+                        }
+                        else if (input == 4)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            Console.WriteLine("-----------------------------------------------------------------------------");
+                            Console.WriteLine("Invalid option, please enter one of the numbers listed");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("-----------------------------------------------------------------------------");
+                        Console.WriteLine("Invalid input, please try again");
+                    }
+                }
+                return true;
             }
             else if (action == 3) // edit course
             {

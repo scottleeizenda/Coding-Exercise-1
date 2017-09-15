@@ -29,12 +29,11 @@ namespace IzendaCourseManagementSystem
             CourseDescription = courseDescription;
             RegisteredStudents = new List<Student>();
         }
-
-        /**
-         * Searches through param courses and returns the index of the course that matches param id.
-         * Returns -1 if not found. Returns -2 if courses list is empty.
-         */
-
+        
+        /// <summary>
+        ///     Searches through the Course table to find a Course with an ID matching the param id. Returns a new Course
+        ///     object with the same field values from the database upon success. Otherwise, returns null.
+        /// </summary>
         public static Course SearchCourseById(SqlConnection connection, int id)
         {
             try
@@ -58,10 +57,10 @@ namespace IzendaCourseManagementSystem
             }
         }
 
-        /**
-         * 
-         */
-
+        /// <summary>
+        ///     Searches through the Student table to find a Student with an ID matching the param id. Returns a new Student
+        ///     object with the same field values from the database upon success. Otherwise, returns null.
+        /// </summary>
         public static Student SearchStudentById(SqlConnection connection, int id)
         {
             try
@@ -83,12 +82,13 @@ namespace IzendaCourseManagementSystem
                 return null;
             }
         }
-
-        /**
-         * 
-         */
         
-
+        /// <summary>
+        ///     Displays all the Students that are registered for a specific course by displaying the rows in the
+        ///     Student_Course table where CourseId matches the Course calling object's Id. The displayed information
+        ///     each Student's info from their ToString() method. Returns true upon successfully displaying all
+        ///     entries. Otherwise, returns false.
+        /// </summary>
         public bool ViewRegisteredStudents(SqlConnection connection)
         {
             // TODO - check if table is empty for better user response
@@ -104,10 +104,10 @@ namespace IzendaCourseManagementSystem
                 Console.WriteLine("-----------------------------------------------------------------------------");
                 foreach (DataRow row in table.Rows)
                 {
-                    // Lookup and show full Course information from CourseId
+                    // Lookup and show full Student information from StudentId
                     int currentStudentId = int.Parse(row["StudentId"].ToString());
-                    //Console.WriteLine(Course.SearchCourseById(connection, this.Id));
-                    Console.WriteLine(SearchStudentById(connection, currentStudentId));
+                    //Console.WriteLine(SearchStudentById(connection, currentStudentId));
+                    Console.WriteLine(User.SearchUserById(connection, currentStudentId, 3));
                 }
                 Console.WriteLine("-----------------------------------------------------------------------------");
 

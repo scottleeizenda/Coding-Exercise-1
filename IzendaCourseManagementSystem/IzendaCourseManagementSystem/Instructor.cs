@@ -179,7 +179,6 @@ namespace IzendaCourseManagementSystem
                     int id;
                     if (input.Equals("list", StringComparison.OrdinalIgnoreCase))
                     {
-                        //this.ViewCourses(this.AssignedCourses);
                         this.ViewAssignedCourses(connection, this.Id);
                     }
                     else if (input.Equals("quit", StringComparison.OrdinalIgnoreCase))

@@ -11,10 +11,6 @@ namespace IzendaCourseManagementSystem
     class Program
     {
         // Declarations
-        /*static List<Instructor> Instructors;
-        static List<Student> Students;
-        static List<Administrator> Administrators;
-        static List<Course> Courses;*/
         static Administrator CurrentAdmin;
         static Instructor CurrentInstructor;
         static Student CurrentStudent;
@@ -22,7 +18,6 @@ namespace IzendaCourseManagementSystem
         public static int courseGradeIdNumber;
         public static int assignInstructorIdNumber;
         public static int registerCourseIdNumber;
-        //public static int studentFinalGradeIdNumber;
         public static string connString;
         public static SqlConnection connection;
 
@@ -32,7 +27,10 @@ namespace IzendaCourseManagementSystem
         //public static bool ViewSelectCourses()
         
         /// <summary>
-        /// 
+        ///     Accesses the database to check inputted credentials with the ones stored in the database. Which table is
+        ///     accessed is based on the userType parameter. User name matching is NOT case-sensitive, but password matching
+        ///     IS case-sensitive, as per standard. Returns -1 upon failing to find matching credentials. Otherwise, returns
+        ///     the ID of the User.
         /// </summary>
         static int CheckCredentials(string userName, string password, int userType)
         {
@@ -79,13 +77,13 @@ namespace IzendaCourseManagementSystem
 
             return -1;
         }
-
-        /**
-         * Asks user for what type of user to login as and attempts to login with user-specified credentials.
-         * Returns -1 upon choosing to quit, returns 1-3 upon success where the number specifies user type.
-         */
+        
         /// <summary>
-        /// 
+        ///     Interacts with user for a number of options. First it will prompt user to choose what type of user he/she
+        ///     would like to login as. Then it'll proceed to ask user for a username and password, which will then jump to
+        ///     the CheckCredentials method to check in with the data for a match in the corresponding table (Administrator,
+        ///     Instructor, or Student tables, based on previous option). Returns -1 upon user entering the quit (4) option.
+        ///     Otherwise, return the option that was selected in the beginning that specified user type.
         /// </summary>
         static int Login()
         {
@@ -127,15 +125,18 @@ namespace IzendaCourseManagementSystem
                     {
                         if (option == 1)
                         {
-                            CurrentAdmin = Administrator.SearchAdministratorById(connection, loginId);
+                            //CurrentAdmin = Administrator.SearchAdministratorById(connection, loginId);
+                            CurrentAdmin = (Administrator)User.SearchUserById(connection, loginId, 1);
                         }
                         else if (option == 2)
                         {
-                            CurrentInstructor = Administrator.SearchInstructorById(connection, loginId);
+                            //CurrentInstructor = Administrator.SearchInstructorById(connection, loginId);
+                            CurrentInstructor = (Instructor)User.SearchUserById(connection, loginId, 2);
                         }
                         else if (option == 3)
                         {
-                            CurrentStudent = Course.SearchStudentById(connection, loginId);
+                            //CurrentStudent = Course.SearchStudentById(connection, loginId);
+                            CurrentStudent = (Student)User.SearchUserById(connection, loginId, 3);
                         }
                         //break;
                         return option;
@@ -158,41 +159,6 @@ namespace IzendaCourseManagementSystem
 
         static void Main(string[] args)
         {
-            // Initializations of default users and Courses (for now)
-            /*
-            Instructors = new List<Instructor>();
-            Students = new List<Student>();
-            Administrators = new List<Administrator>();
-            Courses = new List<Course>();
-            
-            Instructors.Add(new Instructor(100, "John", "Doe", DateTime.Now, "johndoe", "TheRealJohnDoe"));
-            Instructors.Add(new Instructor(101, "Mary", "Moe", DateTime.Now, "marymoe", "TheRealMaryMoe"));
-            Instructors.Add(new Instructor(102, "David", "Throe", DateTime.Now, "davidthroe", "TheRealDavidThroe"));
-            Students.Add(new Student(200, "Larry", "Low", "larrylow", "Iamlarrylow", (float)3.3, 55));
-            Students.Add(new Student(201, "Natalie", "Ngo", "nataliengo", "Iamnataliengo", (float)4.0, 100));
-            Students.Add(new Student(202, "Mark", "Llark", "markllark", "Iammarkllark", (float)1.7, 3));
-            Administrators.Add(new Administrator(1, "Admin", "1", DateTime.Now, "admin1", "adminOne"));
-            Courses.Add(new Course(1302, DateTime.Now, DateTime.Now, 4, "CSCI1302", "Software Development"));
-            Courses.Add(new Course(1730, DateTime.Now, DateTime.Now, 4, "CSCI1730", "Systems Programming"));
-            Courses.Add(new Course(2670, DateTime.Now, DateTime.Now, 4, "CSCI2670", "Intro to the Theory of Computing"));
-            Courses.Add(new Course(2720, DateTime.Now, DateTime.Now, 4, "CSCI2720", "Data Structures"));
-            Courses.Add(new Course(3030, DateTime.Now, DateTime.Now, 3, "CSCI3030", "Computer Ethics"));
-            Students[0].RegisteredCourses.Add(Courses[1]);
-            Courses[1].RegisteredStudents.Add(Students[0]);
-            Students[0].FinalGrades.Add(new CourseGrades(1, 1302, 'B'));
-            Students[1].FinalGrades.Add(new CourseGrades(2, 1302, 'A'));
-            Students[1].FinalGrades.Add(new CourseGrades(3, 1730, 'A'));
-            Students[1].FinalGrades.Add(new CourseGrades(4, 2670, 'A'));
-            Instructors[0].AssignedCourses.Add(Courses[0]);
-            Instructors[1].AssignedCourses.Add(Courses[1]);
-            Instructors[2].AssignedCourses.Add(Courses[2]);
-            
-            //courseGradeIdNumber = 6;
-            //assignInstructorIdNumber = 4;
-            //registerCourseIdNumber = 3;
-            //studentFinalGradeIdNumber = 5;*/
-
-
             /***** Set up Database Tools and ID number generation *****/
             connString = "Integrated Security=SSPI;Persist Security Info=False;Initial Catalog=IzendaCourseManagementSystem;Data Source=SLEE-PC";
             connection = new SqlConnection(connString);
@@ -218,7 +184,7 @@ namespace IzendaCourseManagementSystem
             row = table.Rows[0];
             registerCourseIdNumber = int.Parse(row["MostRecentId"].ToString()) + 1;
 
-            Console.WriteLine($"{courseGradeIdNumber}, {assignInstructorIdNumber}, {registerCourseIdNumber}");
+            //Console.WriteLine($"{courseGradeIdNumber}, {assignInstructorIdNumber}, {registerCourseIdNumber}");
 
             /****** Start of the text-based user interactions ******/
             Console.WriteLine("=============================================================");
