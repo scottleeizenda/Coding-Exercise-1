@@ -84,48 +84,8 @@ namespace IzendaCourseManagementSystem
                 {
                     // Lookup and show Course information from CourseId
                     int currentCourseId = int.Parse(row["CourseId"].ToString());
-                    Course currentCourse = Course.SearchCourseById(connection, currentCourseId);
+                    Course currentCourse = Course.SearchCourseById(connection, null, currentCourseId);
                     Console.WriteLine($"{currentCourse.CourseName} --> {row["FinalGrade"]}");
-                }
-                Console.WriteLine("-----------------------------------------------------------------------------");
-
-                return numRows;
-            }
-            catch
-            {
-                return -1;
-            }
-        }
-
-        /// <summary>
-        ///     Displays the Courses that a Student is registered for through the Student_Course table.
-        ///     SELECT's and shows only the Courses for the specified Student from the calling object.
-        ///     Returns the number of rows if successfully displays, or returns 0 without displaying
-        ///     anything if table is empty. Otherwise, returns -1 if a database operation goes wrong.
-        /// </summary>
-        public int ViewRegisteredCourses(SqlConnection connection)
-        {
-            // SELECT only the courses the specified Instructor teaches
-            try
-            {
-                SqlDataAdapter adapter = new SqlDataAdapter($"SELECT * FROM Student_Course WHERE StudentID = {this.Id}", connection);
-                DataSet set = new DataSet();
-                adapter.Fill(set, "Student_Course");
-                DataTable table = set.Tables["Student_Course"];
-                int numRows = table.Rows.Count;
-
-                // Check if table is empty
-                if (numRows == 0)
-                {
-                    return 0;
-                }
-
-                Console.WriteLine("-----------------------------------------------------------------------------");
-                foreach (DataRow row in table.Rows)
-                {
-                    // Lookup and show full Course information from CourseId
-                    int currentCourseId = int.Parse(row["CourseId"].ToString());
-                    Console.WriteLine(Course.SearchCourseById(connection, currentCourseId));
                 }
                 Console.WriteLine("-----------------------------------------------------------------------------");
 
@@ -144,7 +104,8 @@ namespace IzendaCourseManagementSystem
         /// </summary>
         public int RegisterCourse(SqlConnection connection, int courseId)
         {
-            // TODO - consider improvement by allowing student to take course again if student made below a 'C'
+            // Consider improvement by allowing student to take course again if student made below a 'C',
+            // would need an UPDATE in CourseGrades
             
             try
             {
@@ -200,10 +161,13 @@ namespace IzendaCourseManagementSystem
         }
 
         /// <summary>
-        ///     Removes the Course specified by the courseId param from the Student_Course table. 
-        ///     Check for valid course and index done before this method call.
+        ///     Removes the Course specified by the courseId param from the Student_Course table.
+        ///     Returns 1 upon successfully deleting row.
+        ///     Returns 0 if the table is empty (Student not registered for any courses).
+        ///     Returns -1 if course is not found in the DataSet (Student not registered for specified course).
+        ///     Returns -2 if a database operation went wrong.
         /// </summary>
-        public bool DeregisterCourse(SqlConnection connection, int studentId, int courseId)
+        public int DeregisterCourse(SqlConnection connection, int studentId, int courseId)
         {
             try
             {
@@ -213,47 +177,48 @@ namespace IzendaCourseManagementSystem
                 adapter.Fill(set, "Student_Course");
                 set.Tables["Student_Course"].Constraints.Add("Id_PK", set.Tables["Student_Course"].Columns["Id"], true);
                 DataTable table = set.Tables["Student_Course"];
-                
+                int numRows = table.Rows.Count;
+                // nothing to delete if table is empty
+                if (numRows == 0)
+                {
+                    return 0;
+                }
+
                 int currentCourseId;
                 foreach (DataRow row in table.Rows)
                 {
                     currentCourseId = int.Parse(row["CourseId"].ToString());
-                    // if traversing CourseId == CourseId of the course to deregister
+                    // if the traversing CourseId == CourseId of the course to deregister
                     if (currentCourseId == courseId)
                     {
                         int id = int.Parse(row["Id"].ToString());
                         set.Tables["Student_Course"].Rows.Find(id).Delete();
                         adapter.Update(set.Tables["Student_Course"]);
-                        break;
+                        return 1;
                     }
                 }
-
-                return true;
+                // if loop finishes, course not found in registered courses and no delete done
+                return -1;
             }
             catch (InvalidOperationException ioe)
             {
                 Console.Write(ioe);
-                return false;
+                return -2;
             }
             catch (ArgumentNullException ane)
             {
                 Console.Write(ane);
-                return false;
+                return -2;
             }
             catch (DBConcurrencyException dbce)
             {
                 Console.Write(dbce);
-                return false;
-            }
-            catch (SystemException se)
-            {
-                Console.Write(se);
-                return false;
+                return -2;
             }
             catch
             {
-                Console.Write("Something went real wrong, I guess");
-                return false;
+                Console.Write("Something went real wrong");
+                return -2;
             }
         }
 
@@ -267,25 +232,20 @@ namespace IzendaCourseManagementSystem
         ///     Action #5 = Register for a Course (adds to RegisteredCourses List and RegisteredStudents List in Course)
         ///     Action #6 = Deregister a Course (removes Course from RegisteredCourses List and Registered Students List in Course)
         /// </summary>
-        /// <param name="courses">List of all existing courses</param>
+        /// <param name="connection">Connection to the database</param>
         /// <param name="action">Number to represent what course of action for a Student to take</param>
         /// <returns>True/False of whether the action has been completed or not</returns>
         public bool StudentActionHandler(SqlConnection connection, int action)
         {
             if (action == 1) // view courses
             {
-                bool status = this.ViewCourses(connection);
-                if (!status)
-                {
-                    Console.WriteLine("-----------------------------------------------------------------------------");
-                    Console.WriteLine("There are currently no existing courses.");
-                    Console.WriteLine("-----------------------------------------------------------------------------");
-                }
-                return status;
+                this.ViewCoursesHandler(connection);
+                return true;
             }
             else if (action == 2) // view registered
             {
-                int status = this.ViewRegisteredCourses(connection);
+                //int status = this.ViewRegisteredCourses(connection);
+                int status = this.ViewCourses(connection, this.Id, 3);
                 if (status == 0)
                 {
                     Console.WriteLine("-----------------------------------------------------------------------------");
@@ -338,7 +298,7 @@ namespace IzendaCourseManagementSystem
                 // make sure the inputted id is an int
                 if (Int32.TryParse(Console.ReadLine(), out id))
                 {
-                    Course selectedCourse = Course.SearchCourseById(connection, id);
+                    Course selectedCourse = Course.SearchCourseById(connection, null, id);
                     if (selectedCourse != null)
                     {
                         Console.WriteLine($"Course Successfully Found, adding this course to your registered courses:\n{selectedCourse}");
@@ -346,7 +306,6 @@ namespace IzendaCourseManagementSystem
                         if (status == 1)
                         {
                             Console.WriteLine("Course successfully registered.");
-                            Program.registerCourseIdNumber++;
                             Console.WriteLine("-----------------------------------------------------------------------------");
                             return true;
                         }
@@ -383,39 +342,41 @@ namespace IzendaCourseManagementSystem
             }
             else // deregister course
             {
-                // TODO - check for empty Student_Course table for specific student
-                /*if (this.RegisteredCourses.Count == 0)
-                {
-                    Console.WriteLine("-----------------------------------------------------------------------------");
-                    Console.WriteLine("You are not currently registered for any courses");
-                    Console.WriteLine("-----------------------------------------------------------------------------");
-                    return false;
-                }*/
                 Console.WriteLine("-----------------------------------------------------------------------------");
                 Console.Write("Enter the ID of the course you would like to deregister: ");
                 int id;
                 // make sure the inputted id is an int
                 if (Int32.TryParse(Console.ReadLine(), out id))
                 {
-                    Course selectedCourse = Course.SearchCourseById(connection, id);
+                    Course selectedCourse = Course.SearchCourseById(connection, null, id);
                     if (selectedCourse != null)
                     {
-                        Console.WriteLine($"Course Successfully Found, removing this course from your registered courses:\n{selectedCourse}");
-                        bool status = this.DeregisterCourse(connection, this.Id, id);
-                        if (status)
+                        Console.WriteLine($"Course Successfully Found, attempting to remove this course from your registered courses:\n{selectedCourse}");
+                        int status = this.DeregisterCourse(connection, this.Id, id);
+                        if (status == 1)
                         {
                             Console.WriteLine("Course successfully deregistered.");
+                            Console.WriteLine("-----------------------------------------------------------------------------");
+                            return true;
+                        }
+                        else if (status == 0)
+                        {
+                            Console.WriteLine("You currently have no courses to deregister.");
+                        }
+                        else if (status == -1)
+                        {
+                            Console.WriteLine("You are not currently registered for this course.");
                         }
                         else
                         {
                             Console.WriteLine("Failed to deregister course.");
                         }
                         Console.WriteLine("-----------------------------------------------------------------------------");
-                        return status;
+                        return false;
                     }
                     else
                     {
-                        Console.WriteLine($"Failed to find course of ID {id} in your registered courses");
+                        Console.WriteLine($"Failed to find course of ID '{id}'.");
                         Console.WriteLine("-----------------------------------------------------------------------------");
                         return false;
                     }

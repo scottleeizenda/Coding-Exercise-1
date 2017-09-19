@@ -105,6 +105,14 @@ INSERT INTO Course (Id, StartDate, EndDate, CreditHours, CourseName, CourseDescr
 VALUES (10014620, '2017-08-14', '2017-12-05', 3, 'MIST4620', 'Systems Analysis and Design');
 INSERT INTO Course (Id, StartDate, EndDate, CreditHours, CourseName, CourseDescription)
 VALUES (10015620, '2017-08-14', '2017-12-05', 3, 'MIST5620', 'Business Intelligence');
+INSERT INTO Course (Id, StartDate, EndDate, CreditHours, CourseName, CourseDescription)
+VALUES (10022250, '2017-08-14', '2017-12-05', 4, 'MATH2250', 'Calculus I for Science and Engineering');
+INSERT INTO Course (Id, StartDate, EndDate, CreditHours, CourseName, CourseDescription)
+VALUES (10022260, '2017-08-14', '2017-12-05', 4, 'MATH2260', 'Calculus II for Science and Engineering');
+INSERT INTO Course (Id, StartDate, EndDate, CreditHours, CourseName, CourseDescription)
+VALUES (10022270, '2017-08-14', '2017-12-05', 4, 'MATH2270', 'Calculus III for Science and Engineering');
+INSERT INTO Course (Id, StartDate, EndDate, CreditHours, CourseName, CourseDescription)
+VALUES (10023300, '2017-08-14', '2017-12-05', 3, 'MATH3300', 'Applied Linear Algebra');
 
 INSERT INTO CourseGrades (Id, CourseId, FinalGrade) VALUES (1, 10001302, 'B');
 INSERT INTO CourseGrades (Id, CourseId, FinalGrade) VALUES (2, 10001302, 'A');

@@ -14,18 +14,12 @@ namespace IzendaCourseManagementSystem
         static Administrator CurrentAdmin;
         static Instructor CurrentInstructor;
         static Student CurrentStudent;
-
+        static string connString;
+        static SqlConnection connection;
         public static int courseGradeIdNumber;
         public static int assignInstructorIdNumber;
         public static int registerCourseIdNumber;
-        public static string connString;
-        public static SqlConnection connection;
 
-        /**
-         * TODO - make all user's ViewCourses method have the option to view a specific course, category of Courses, or list all Courses
-         */
-        //public static bool ViewSelectCourses()
-        
         /// <summary>
         ///     Accesses the database to check inputted credentials with the ones stored in the database. Which table is
         ///     accessed is based on the userType parameter. User name matching is NOT case-sensitive, but password matching
@@ -125,20 +119,16 @@ namespace IzendaCourseManagementSystem
                     {
                         if (option == 1)
                         {
-                            //CurrentAdmin = Administrator.SearchAdministratorById(connection, loginId);
                             CurrentAdmin = (Administrator)User.SearchUserById(connection, loginId, 1);
                         }
                         else if (option == 2)
                         {
-                            //CurrentInstructor = Administrator.SearchInstructorById(connection, loginId);
                             CurrentInstructor = (Instructor)User.SearchUserById(connection, loginId, 2);
                         }
                         else if (option == 3)
                         {
-                            //CurrentStudent = Course.SearchStudentById(connection, loginId);
                             CurrentStudent = (Student)User.SearchUserById(connection, loginId, 3);
                         }
-                        //break;
                         return option;
                     }
                     else
@@ -184,7 +174,7 @@ namespace IzendaCourseManagementSystem
             row = table.Rows[0];
             registerCourseIdNumber = int.Parse(row["MostRecentId"].ToString()) + 1;
 
-            //Console.WriteLine($"{courseGradeIdNumber}, {assignInstructorIdNumber}, {registerCourseIdNumber}");
+            Console.WriteLine($"{courseGradeIdNumber}, {assignInstructorIdNumber}, {registerCourseIdNumber}");
 
             /****** Start of the text-based user interactions ******/
             Console.WriteLine("=============================================================");

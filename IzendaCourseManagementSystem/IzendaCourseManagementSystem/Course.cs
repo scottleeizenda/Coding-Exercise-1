@@ -17,7 +17,6 @@ namespace IzendaCourseManagementSystem
         public int CreditHours { get; set; }
         public string CourseName { get; set; }
         public string CourseDescription { get; set; }
-        public List<Student> RegisteredStudents { get; set; } // this assumes one set of students per course
 
         public Course(int id, DateTime startDate, DateTime endDate, int creditHours, string courseName, string courseDescription)
         {
@@ -27,18 +26,21 @@ namespace IzendaCourseManagementSystem
             CreditHours = creditHours;
             CourseName = courseName;
             CourseDescription = courseDescription;
-            RegisteredStudents = new List<Student>();
         }
         
         /// <summary>
-        ///     Searches through the Course table to find a Course with an ID matching the param id. Returns a new Course
-        ///     object with the same field values from the database upon success. Otherwise, returns null.
+        ///     Searches through the Course table to find a Course with an ID matching the param id. If parameter 'query' is null,
+        ///     searches through the entire Course table. Otherwise, uses the query to subset the Course table to search through.
+        ///     Returns a new Course object with the same field values from the database upon success. Otherwise, returns null.
         /// </summary>
-        public static Course SearchCourseById(SqlConnection connection, int id)
+        public static Course SearchCourseById(SqlConnection connection, string query, int id)
         {
+            if (query == null) { query = "SELECT * FROM Course"; }
+
             try
             {
-                SqlDataAdapter adapter = new SqlDataAdapter("SELECT * FROM Course", connection);
+                //SqlDataAdapter adapter = new SqlDataAdapter("SELECT * FROM Course", connection);
+                SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
                 SqlCommandBuilder builder = new SqlCommandBuilder(adapter);
                 DataSet set = new DataSet();
                 adapter.Fill(set, "Course");
@@ -56,32 +58,6 @@ namespace IzendaCourseManagementSystem
                 return null;
             }
         }
-
-        /// <summary>
-        ///     Searches through the Student table to find a Student with an ID matching the param id. Returns a new Student
-        ///     object with the same field values from the database upon success. Otherwise, returns null.
-        /// </summary>
-        public static Student SearchStudentById(SqlConnection connection, int id)
-        {
-            try
-            {
-                SqlDataAdapter adapter = new SqlDataAdapter("SELECT * FROM Student", connection);
-                SqlCommandBuilder builder = new SqlCommandBuilder(adapter);
-                DataSet set = new DataSet();
-                adapter.Fill(set, "Student");
-                set.Tables["Student"].Constraints.Add("Id_PK", set.Tables["Student"].Columns["Id"], true);
-
-                DataRow row = set.Tables["Student"].Rows.Find(id);
-                float gpa = float.Parse(row["GPA"].ToString());
-                int hours = Int32.Parse(row["CreditHours"].ToString());
-
-                return new Student(id, row["FirstName"].ToString(), row["LastName"].ToString(), row["UserName"].ToString(), row["Password"].ToString(), gpa, hours);
-            }
-            catch
-            {
-                return null;
-            }
-        }
         
         /// <summary>
         ///     Displays all the Students that are registered for a specific course by displaying the rows in the
@@ -89,10 +65,8 @@ namespace IzendaCourseManagementSystem
         ///     each Student's info from their ToString() method. Returns true upon successfully displaying all
         ///     entries. Otherwise, returns false.
         /// </summary>
-        public bool ViewRegisteredStudents(SqlConnection connection)
+        public int ViewRegisteredStudents(SqlConnection connection)
         {
-            // TODO - check if table is empty for better user response
-
             // SELECT only the students registered for the specified course
             try
             {
@@ -100,22 +74,27 @@ namespace IzendaCourseManagementSystem
                 DataSet set = new DataSet();
                 adapter.Fill(set, "Student_Course");
                 DataTable table = set.Tables["Student_Course"];
+                int numRows = table.Rows.Count;
+                // check if empty
+                if (numRows == 0)
+                {
+                    return 0;
+                }
 
                 Console.WriteLine("-----------------------------------------------------------------------------");
                 foreach (DataRow row in table.Rows)
                 {
                     // Lookup and show full Student information from StudentId
                     int currentStudentId = int.Parse(row["StudentId"].ToString());
-                    //Console.WriteLine(SearchStudentById(connection, currentStudentId));
                     Console.WriteLine(User.SearchUserById(connection, currentStudentId, 3));
                 }
                 Console.WriteLine("-----------------------------------------------------------------------------");
 
-                return true;
+                return numRows;
             }
             catch
             {
-                return false;
+                return -1;
             }
         }
 

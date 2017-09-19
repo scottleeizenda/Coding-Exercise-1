@@ -89,7 +89,7 @@ namespace IzendaCourseManagementSystem
         /// </summary>
         public bool UpdateCourse(SqlConnection connection, int currentId, string[] courseFields)
         {
-            // courseFields should be exactly 6 elements, corresponds exactly with Course columns in DB
+            // courseFields should be exactly 6 elements, matches exactly with Course columns in DB
             if (courseFields.Length != 6)
             {
                 return false;
@@ -97,7 +97,7 @@ namespace IzendaCourseManagementSystem
 
             int id, hours;
             DateTime startDate, endDate;
-            Course currentCourse = Course.SearchCourseById(connection, currentId);
+            Course currentCourse = Course.SearchCourseById(connection, null, currentId);
 
             // check all fields' validity first before attempting to update database, return false upon an invalid input field
 
@@ -178,6 +178,36 @@ namespace IzendaCourseManagementSystem
                 return false;
             }
         }
+
+        /// <summary>
+        ///     Method used mainly for Administrator actions 'CreateCourse' and 'UpdateCourse'. Received user input
+        ///     for course fields to fill out for a row in the Course table. Console output messages differ slightly
+        ///     depending on actionType parameter which just signifies what database action is the messages for ('1'
+        ///     for CreateCourse, '2' for UpdateCourse').
+        /// </summary>
+        public string[] ReceiveCourseFields(int actionType)
+        {
+            string extra;
+            if (actionType == 2) { extra = "new "; }
+            else { extra = ""; }
+            
+            if (actionType == 2) { Console.WriteLine("[Leave a field blank if you wish to keep it the same as before]"); }
+            string[] courseFields = new string[6];
+            Console.Write($"Enter the {extra}course ID: ");
+            courseFields[0] = Console.ReadLine();
+            Console.Write($"Enter the {extra}course start date: ");
+            courseFields[1] = Console.ReadLine();
+            Console.Write($"Enter the {extra}course end date: ");
+            courseFields[2] = Console.ReadLine();
+            Console.Write($"Enter the {extra}course credit hours: ");
+            courseFields[3] = Console.ReadLine();
+            Console.Write($"Enter the {extra}course name: ");
+            courseFields[4] = Console.ReadLine();
+            Console.Write($"Enter the {extra}course description: ");
+            courseFields[5] = Console.ReadLine();
+
+            return courseFields;
+        }
         
         /// <summary>
         ///     Deletes a Course from the Course table in the database. Returns true upon success, false if anything
@@ -238,56 +268,6 @@ namespace IzendaCourseManagementSystem
         }
 
         /// <summary>
-        ///     Searches through the Instructor table in the database by ID and returns a new Instructor object
-        ///     with matching attributes from the table columns. Returns null if Instructor not found.
-        /// </summary>
-        public static Administrator SearchAdministratorById(SqlConnection connection, int id)
-        {
-            try
-            {
-                SqlDataAdapter adapter = new SqlDataAdapter("SELECT * FROM Administrator", connection);
-                SqlCommandBuilder builder = new SqlCommandBuilder(adapter);
-                DataSet set = new DataSet();
-                adapter.Fill(set, "Administrator");
-                set.Tables["Administrator"].Constraints.Add("Id_PK", set.Tables["Administrator"].Columns["Id"], true);
-
-                DataRow row = set.Tables["Administrator"].Rows.Find(id);
-                DateTime hireDate = DateTime.Parse(row["HireDate"].ToString());
-
-                return new Administrator(id, row["FirstName"].ToString(), row["LastName"].ToString(), hireDate, row["UserName"].ToString(), row["Password"].ToString());
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Searches through the Instructor table in the database by ID and returns a new Instructor object
-        ///     with matching attributes from the table columns. Returns null if Instructor not found.
-        /// </summary>
-        public static Instructor SearchInstructorById(SqlConnection connection, int id)
-        {
-            try
-            {
-                SqlDataAdapter adapter = new SqlDataAdapter("SELECT * FROM Instructor", connection);
-                SqlCommandBuilder builder = new SqlCommandBuilder(adapter);
-                DataSet set = new DataSet();
-                adapter.Fill(set, "Instructor");
-                set.Tables["Instructor"].Constraints.Add("Id_PK", set.Tables["Instructor"].Columns["Id"], true);
-
-                DataRow row = set.Tables["Instructor"].Rows.Find(id);
-                DateTime hireDate = DateTime.Parse(row["HireDate"].ToString());
-
-                return new Instructor(id, row["FirstName"].ToString(), row["LastName"].ToString(), hireDate, row["UserName"].ToString(), row["Password"].ToString());
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
         ///     Assigns an Instructor to a Course by adding an entry to the Instructor_Course associative table.
         ///     The table has a pairing of an Instructor's ID and Course's ID.
         /// </summary>
@@ -327,8 +307,7 @@ namespace IzendaCourseManagementSystem
         ///     Action #4 = Delete a course (Database DELETE)
         ///     Action #5 = Assign an Instructor to teach a Course (will also later deal with a database)
         /// </summary>
-        /// <param name="courses">List of all existing courses</param>
-        /// <param name="instructors">List of all available instructors</param>
+        /// <param name="connection">Connection to the database</param>
         /// <param name="action">Number to represent what course of action for an Administrator to take</param>
         /// <returns>True/False of whether the action has been completed or not</returns>
         public bool AdminActionHandler(SqlConnection connection, int action)
@@ -336,19 +315,7 @@ namespace IzendaCourseManagementSystem
             if (action == 1) // create course
             {
                 Console.WriteLine("-----------------------------------------------------------------------------");
-                string[] courseFields = new string[6];
-                Console.Write("Enter the course ID: ");
-                courseFields[0] = Console.ReadLine();
-                Console.Write("Enter the course start date: ");
-                courseFields[1] = Console.ReadLine();
-                Console.Write("Enter the course end date: ");
-                courseFields[2] = Console.ReadLine();
-                Console.Write("Enter the course credit hours: ");
-                courseFields[3] = Console.ReadLine();
-                Console.Write("Enter the course name: ");
-                courseFields[4] = Console.ReadLine();
-                Console.Write("Enter the course description: ");
-                courseFields[5] = Console.ReadLine();
+                string[] courseFields = this.ReceiveCourseFields(1);
 
                 bool status = this.CreateCourse(connection, courseFields);
                 if (status)
@@ -364,68 +331,7 @@ namespace IzendaCourseManagementSystem
             }
             else if (action == 2) // view courses
             {
-                /*bool status = this.ViewCourses(connection);
-                if (!status)
-                {
-                    Console.WriteLine("There are currently no existing courses.");
-                    Console.WriteLine("-----------------------------------------------------------------------------");
-                }
-                return status;*/
-
-                while (true)
-                {
-                    Console.WriteLine("-----------------------------------------------------------------------------");
-                    Console.WriteLine("[Enter '1' to view all existing courses]");
-                    Console.WriteLine("[Enter '2' to view all existing courses under a given course prefix]");
-                    Console.WriteLine("[Enter '3' to search for a specific course by ID]");
-                    Console.WriteLine("[Enter '4' to go back to main menu]:");
-                    int input;
-                    if (Int32.TryParse(Console.ReadLine(), out input))
-                    {
-                        if (input == 1)
-                        {
-                            this.ViewCourses(connection);
-                            break;
-                        }
-                        else if (input == 2)
-                        {
-                            Console.WriteLine("-----------------------------------------------------------------------------");
-                            Console.Write("Enter the Course prefix you would like to search for: ");
-                            string prefix = Console.ReadLine();
-                            int status = this.ViewCourses(connection, prefix);
-                            // show message for each status
-                        }
-                        else if (input == 3)
-                        {
-                            Console.WriteLine("-----------------------------------------------------------------------------");
-                            Console.Write("Enter the ID of the course you would like to look up: ");
-                            int courseId;
-                            if (Int32.TryParse(Console.ReadLine(), out courseId))
-                            {
-                                Console.WriteLine(Course.SearchCourseById(connection, courseId));
-                            }
-                            else
-                            {
-                                Console.WriteLine("Invalid ID input");
-                                continue;
-                            }
-                        }
-                        else if (input == 4)
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            Console.WriteLine("-----------------------------------------------------------------------------");
-                            Console.WriteLine("Invalid option, please enter one of the numbers listed");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("-----------------------------------------------------------------------------");
-                        Console.WriteLine("Invalid input, please try again");
-                    }
-                }
+                this.ViewCoursesHandler(connection);
                 return true;
             }
             else if (action == 3) // edit course
@@ -436,24 +342,11 @@ namespace IzendaCourseManagementSystem
                 // make sure the inputted id is an int
                 if (Int32.TryParse(Console.ReadLine(), out id))
                 {
-                    Course currentCourse = Course.SearchCourseById(connection, id);
+                    Course currentCourse = Course.SearchCourseById(connection, null, id);
                     if (currentCourse != null)
                     {
                         Console.WriteLine($"Course Successfully Found:\n{currentCourse}");
-                        Console.WriteLine("[Leave a field blank if you wish to keep it the same as before]");
-                        string[] courseFields = new string[6];
-                        Console.Write("Enter the new course ID: ");
-                        courseFields[0] = Console.ReadLine();
-                        Console.Write("Enter the new course start date: ");
-                        courseFields[1] = Console.ReadLine();
-                        Console.Write("Enter the new course end date: ");
-                        courseFields[2] = Console.ReadLine();
-                        Console.Write("Enter the new course credit hours: ");
-                        courseFields[3] = Console.ReadLine();
-                        Console.Write("Enter the new course name: ");
-                        courseFields[4] = Console.ReadLine();
-                        Console.Write("Enter the new course description: ");
-                        courseFields[5] = Console.ReadLine();
+                        string[] courseFields = this.ReceiveCourseFields(2);
                         
                         bool status = this.UpdateCourse(connection, id, courseFields);
                         if (status)
@@ -489,7 +382,7 @@ namespace IzendaCourseManagementSystem
                 // make sure the inputted id is an int
                 if (Int32.TryParse(Console.ReadLine(), out id))
                 {
-                    Course currentCourse = Course.SearchCourseById(connection, id);
+                    Course currentCourse = Course.SearchCourseById(connection, null, id);
                     if (currentCourse != null)
                     {
                         Console.WriteLine($"Course Successfully Found:\n{currentCourse}");
@@ -541,7 +434,7 @@ namespace IzendaCourseManagementSystem
             }
             else // assign instructor
             {
-                // TODO - consider adding check for empty tables to end this action earlier
+                // TODO? - consider adding check for empty tables to end this action earlier
 
                 Instructor selectedInstructor;
                 Course selectedCourse;
@@ -566,7 +459,7 @@ namespace IzendaCourseManagementSystem
                     }
                     else if (Int32.TryParse(input, out id))
                     {
-                        selectedInstructor = SearchInstructorById(connection, id);
+                        selectedInstructor = (Instructor)User.SearchUserById(connection, id, 2);
                         if (selectedInstructor != null)
                         {
                             Console.WriteLine($"Instructor {selectedInstructor.FirstName} {selectedInstructor.LastName} successfully found.");
@@ -580,7 +473,7 @@ namespace IzendaCourseManagementSystem
                                 input = Console.ReadLine();
                                 if (input.Equals("list", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    this.ViewCourses(connection);
+                                    this.ViewCourses(connection, null);
                                 }
                                 else if (input.Equals("quit", StringComparison.OrdinalIgnoreCase))
                                 {
@@ -589,7 +482,7 @@ namespace IzendaCourseManagementSystem
                                 }
                                 else if (Int32.TryParse(input, out id))
                                 {
-                                    selectedCourse = Course.SearchCourseById(connection, id);
+                                    selectedCourse = Course.SearchCourseById(connection, null, id);
                                     if (selectedCourse != null)
                                     {
                                         Console.WriteLine($"Course {selectedCourse.CourseName} successfully found.");
@@ -597,7 +490,6 @@ namespace IzendaCourseManagementSystem
                                         if (status)
                                         {
                                             Console.WriteLine($"Instructor {selectedInstructor.FirstName} {selectedInstructor.LastName} has been assigned to teach course {selectedCourse.CourseName}");
-                                            Program.assignInstructorIdNumber++;
                                             Console.WriteLine("-----------------------------------------------------------------------------");
                                             return true;
                                         }

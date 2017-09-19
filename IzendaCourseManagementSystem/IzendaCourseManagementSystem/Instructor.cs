@@ -12,46 +12,12 @@ namespace IzendaCourseManagementSystem
     {
         // Extra declarations from a User
         public DateTime HireDate { get; set; }
-        public List<Course> AssignedCourses { get; set; }
 
         public Instructor(int id, string firstName, string lastName, DateTime hireDate, string userName, string password)
             : base (id, firstName, lastName, userName, password)
         {
             HireDate = hireDate;
             UserType = "Instructor";
-            AssignedCourses = new List<Course>();
-        }
-
-        /// <summary>
-        ///     Displays the Courses that an Instructor is assigned to teach through the Instructor_Course table.
-        ///     SELECT's and shows only the Courses for the specified Instructor from the instructorId param.
-        ///     Returns true upon successfully displaying. Otherwise, returns false if anything goes wrong.
-        /// </summary>
-        public bool ViewAssignedCourses(SqlConnection connection, int instructorId)
-        {
-            // SELECT only the courses the specified Instructor teaches
-            try
-            {
-                SqlDataAdapter adapter = new SqlDataAdapter($"SELECT * FROM Instructor_Course WHERE InstructorID = {instructorId}", connection);
-                DataSet set = new DataSet();
-                adapter.Fill(set, "Instructor_Course");
-                DataTable table = set.Tables["Instructor_Course"];
-                
-                Console.WriteLine("-----------------------------------------------------------------------------");
-                foreach (DataRow row in table.Rows)
-                {
-                    // Lookup and show full Course information from CourseId
-                    int currentCourseId = int.Parse(row["CourseId"].ToString());
-                    Console.WriteLine(Course.SearchCourseById(connection, currentCourseId));
-                }
-                Console.WriteLine("-----------------------------------------------------------------------------");
-
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
         }
         
         /// <summary>
@@ -118,9 +84,15 @@ namespace IzendaCourseManagementSystem
 
                     // now deregister student regardless of what grade received
                     Console.WriteLine("Attempting to deregister course...");
-                    return selectedStudent.DeregisterCourse(connection, selectedStudent.Id, courseId);
-
-                    //return true;
+                    int status = selectedStudent.DeregisterCourse(connection, selectedStudent.Id, courseId);
+                    if (status == 1)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
                 catch
                 {
@@ -138,38 +110,46 @@ namespace IzendaCourseManagementSystem
         ///     Action #3 = Submit a final grade for a Student (Deregisters Student from Course upon submission,
         ///                 and updates the Student's CreditHours if final grade is at least a 'C')
         /// </summary>
-        /// <param name="courses">List of all existing courses</param>
+        /// <param name="connection">Connection to the database</param>
         /// <param name="action">Number to represent what course of action for an Instructor to take</param>
         /// <returns>True/False of whether the action has been completed or not</returns>
         public bool InstructorActionHandler(SqlConnection connection, int action)
         {
             if (action == 1) // view courses
             {
-                bool status = this.ViewCourses(connection);
-                if (!status)
-                {
-                    Console.WriteLine("There are currently no existing courses.");
-                }
-                return status;
+                this.ViewCoursesHandler(connection);
+                return true;
             }
             else if (action == 2) // view assigned
             {
-                bool status = this.ViewAssignedCourses(connection, this.Id);
-                if (!status)
-                {
-                    Console.WriteLine("You are not currently assigned to teach any courses.");
-                    Console.WriteLine("-----------------------------------------------------------------------------");
-                }
-                return status;
+                int status = this.ViewCourses(connection, this.Id, 2);
+                if (status == -1) { return false; }
+                else { return true; }
             }
             else // submit final grades
             {
-                // TODO - Check for empty assigned courses list
+                // check if instructor has any courses assigned or error in database operation
+                int coursesStatus = this.ViewCourses(connection, this.Id, 2);
+                if (coursesStatus == 0)
+                {
+                    Console.WriteLine("You are not currently assigned to teach any courses.");
+                    Console.WriteLine("-----------------------------------------------------------------------------");
+                    return false;
+                }
+                else if (coursesStatus == -1)
+                {
+                    Console.WriteLine("Failed to display assigned courses.");
+                    Console.WriteLine("-----------------------------------------------------------------------------");
+                    return false;
+                }
 
+                // otherwise, proceed to getting user input on course to submit a grade for
                 Course selectedCourse;
                 Student selectedStudent;
-                Console.WriteLine("-----------------------------------------------------------------------------");
-                // loop for user input on selecting an assigned course to submit grades for
+                // query to retrieve courses assigned to this Instructor
+                string assignedCoursesQuery = "SELECT Course.Id, Course.StartDate, Course.EndDate, Course.CreditHours, Course.CourseName, Course.CourseDescription FROM Course " +
+                                             $"INNER JOIN Instructor_Course ON Course.Id = Instructor_Course.CourseId WHERE Instructor_Course.InstructorId = {this.Id}";
+                //Console.WriteLine("-----------------------------------------------------------------------------");
                 while (true)
                 {
                     Console.WriteLine("Type the ID of the course you would like to submit final grades for");
@@ -179,7 +159,7 @@ namespace IzendaCourseManagementSystem
                     int id;
                     if (input.Equals("list", StringComparison.OrdinalIgnoreCase))
                     {
-                        this.ViewAssignedCourses(connection, this.Id);
+                        this.ViewCourses(connection, this.Id, 2);
                     }
                     else if (input.Equals("quit", StringComparison.OrdinalIgnoreCase))
                     {
@@ -189,7 +169,7 @@ namespace IzendaCourseManagementSystem
                     }
                     else if (Int32.TryParse(input, out id))
                     {
-                        selectedCourse = Course.SearchCourseById(connection, id);
+                        selectedCourse = Course.SearchCourseById(connection, assignedCoursesQuery, id);
                         if (selectedCourse != null)
                         {
                             Console.WriteLine($"Course {selectedCourse.CourseName} successfully found.");
@@ -197,6 +177,14 @@ namespace IzendaCourseManagementSystem
                             // loop for user input on selecting a student to submit a grade for
                             while (true)
                             {
+                                // check if there are registered students
+                                if (selectedCourse.ViewRegisteredStudents(connection) == 0)
+                                {
+                                    Console.WriteLine("There are currently no students registered for this course.");
+                                    Console.WriteLine("-----------------------------------------------------------------------------");
+                                    break;
+                                }
+                                // otherwise, proceed to receive user input of Student to submit grade for
                                 Console.WriteLine("Type the ID of the student you would like to submit a final grade for");
                                 Console.WriteLine("[Enter 'list' to see all students registered for this course]");
                                 Console.Write("[Enter 'quit' to cancel]: ");
@@ -213,7 +201,7 @@ namespace IzendaCourseManagementSystem
                                 }
                                 else if (Int32.TryParse(input, out id))
                                 {
-                                    selectedStudent = Course.SearchStudentById(connection, id);
+                                    selectedStudent = (Student)User.SearchUserById(connection, id, 3);
                                     if (selectedStudent != null)
                                     {
                                         Console.WriteLine($"Student {selectedStudent.FirstName} {selectedStudent.LastName} successfully found.");
@@ -221,9 +209,9 @@ namespace IzendaCourseManagementSystem
                                         Console.Write("What letter grade would you like to give this student for this course?: ");
                                         string letterGrade = Console.ReadLine();
                                         bool status = this.SubmitFinalGrade(connection, selectedStudent, letterGrade, selectedCourse.Id, selectedCourse.CreditHours, Program.courseGradeIdNumber);
-                                        Program.courseGradeIdNumber++; // increment to make unique subsequent CourseGrades.Id's
                                         if (status)
                                         {
+                                            Program.courseGradeIdNumber++; // increment to make unique subsequent CourseGrades.Id's
                                             Console.WriteLine($"Final Grade '{letterGrade.ToUpper()}' has been submitted to for {selectedStudent.FirstName} {selectedStudent.LastName}");
                                             Console.WriteLine("-----------------------------------------------------------------------------");
                                             return true;
