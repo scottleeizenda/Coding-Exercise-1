@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -13,9 +10,7 @@ namespace IzendaCourseManagementSystem
         // Extra declarations from a User
         public float GPA { get; set; }
         public int CreditHours { get; set; }
-        public string Level { get; set; }
-        public List<Course> RegisteredCourses { get; set; }
-        public List<CourseGrades> FinalGrades { get; set; }
+        public Level Level { get; set; }
 
         public Student(int id, string firstName, string lastName, string userName, string password, float gpa, int creditHours)
             : base(id, firstName, lastName, userName, password)
@@ -23,43 +18,33 @@ namespace IzendaCourseManagementSystem
             GPA = gpa;
             CreditHours = creditHours;
             Level = CalculateLevel(creditHours);
-            RegisteredCourses = new List<Course>();
-            FinalGrades = new List<CourseGrades>();
+            UserType = UserType.Student;
         }
         
         /// <summary>
         ///     Takes in the number of CreditHours for a Student and returns a string representing
         ///     the Student's grade Level. Returns null if hours is negative.
         /// </summary>
-        public string CalculateLevel(int hours)
+        /// <param name="hours">The total credit hours to convert to a certain grade level</param>
+        /// <returns>A Level enum representing the Student's grade level</returns>
+        public Level CalculateLevel(int hours)
         {
-            if (hours >= 0 && hours < 30)
-            {
-                return "Freshman";
-            }
-            else if (hours >= 30 && hours < 60)
-            {
-                return "Sophomore";
-            }
-            else if (hours >= 60 && hours < 90)
-            {
-                return "Junior";
-            }
-            else if (hours >= 90)
-            {
-                return "Senior";
-            }
-            else
-            {
-                return null;
-            }
+            if (hours >= 0 && hours < 30) { return Level.Freshman; }
+            else if (hours >= 30 && hours < 60) { return Level.Sophomore; }
+            else if (hours >= 60 && hours < 90) { return Level.Junior; }
+            else if (hours >= 90) { return Level.Senior; }
+            else { return Level.Undefined; }
         }
         
         /// <summary>
         ///     Displays all CourseGrades the student has earned. Accesses this information through an INNER JOIN query with
-        ///     the CourseGrades and Student_CourseGrades tables. Returns the number of rows if successfully displays, or
-        ///     returns 0 without displaying anything if table is empty. Otherwise, returns -1 if a database operation goes wrong.
+        ///     the CourseGrades and Student_CourseGrades tables.
         /// </summary>
+        /// <param name="connection">Connection object for the database</param>
+        /// <returns>
+        ///     Returns the number of rows that were successfully displayed if nothing goes wrong, including 0 for empty table.
+        ///     Returns -1 otherwise if a database operation goes wrong.
+        /// </returns>
         public int ViewFinalGrades(SqlConnection connection)
         {
             try
@@ -91,17 +76,25 @@ namespace IzendaCourseManagementSystem
 
                 return numRows;
             }
-            catch
+            catch(Exception ex)
             {
+                Console.WriteLine(ex);
                 return -1;
             }
         }
 
         /// <summary>
         ///     Adds the Course specified by the param courseId to the Student_Course table. Courses that a Student is already registered
-        ///     for or already completed will not be added. Returns 1 upon success, -1 if duplicate course in RegisteredCourses, -2 if
-        ///     course already completed, -3 if a database command went wrong.
+        ///     for or already completed will not be added.
         /// </summary>
+        /// <param name="connection">Connection object to the database</param>
+        /// <param name="courseId">The ID of the Course to register for</param>
+        /// <returns>
+        ///     Returns 1 if all checks are passed and Course is successfully registered.
+        ///     Returns -1 if a duplicate course is found in a Student's registered courses (Student_Course table).
+        ///     Returns -2 if the Student has already completed the Course (checked from Student_CourseGrades table).
+        ///     Returns -3 if a database operation goes wrong at any point.
+        /// </returns>
         public int RegisterCourse(SqlConnection connection, int courseId)
         {
             // Consider improvement by allowing student to take course again if student made below a 'C',
@@ -154,19 +147,25 @@ namespace IzendaCourseManagementSystem
 
                 return 1;
             }
-            catch
+            catch(Exception ex)
             {
+                Console.WriteLine(ex);
                 return -3;
             }
         }
 
         /// <summary>
         ///     Removes the Course specified by the courseId param from the Student_Course table.
+        /// </summary>
+        /// <param name="connection">Connection object to the database</param>
+        /// <param name="studentId">ID of the Student that will be deregistering a Course</param>
+        /// <param name="courseId">ID of the Course the Student will deregister</param>
+        /// <returns>
         ///     Returns 1 upon successfully deleting row.
         ///     Returns 0 if the table is empty (Student not registered for any courses).
         ///     Returns -1 if course is not found in the DataSet (Student not registered for specified course).
         ///     Returns -2 if a database operation went wrong.
-        /// </summary>
+        /// </returns>
         public int DeregisterCourse(SqlConnection connection, int studentId, int courseId)
         {
             try
@@ -215,9 +214,9 @@ namespace IzendaCourseManagementSystem
                 Console.Write(dbce);
                 return -2;
             }
-            catch
+            catch (Exception ex)
             {
-                Console.Write("Something went real wrong");
+                Console.Write(ex);
                 return -2;
             }
         }
@@ -342,6 +341,9 @@ namespace IzendaCourseManagementSystem
             }
             else // deregister course
             {
+                // query to retrieve full course info of courses this Student is registered for
+                //string query = "SELECT Course.Id, Course.StartDate, Course.EndDate, Course.CreditHours, Course.CourseName, Course.CourseDescription FROM Course " +
+                //              $"INNER JOIN Student_Course ON Course.Id = Student_Course.CourseId WHERE Student_Course.StudentId = {this.Id}";
                 Console.WriteLine("-----------------------------------------------------------------------------");
                 Console.Write("Enter the ID of the course you would like to deregister: ");
                 int id;

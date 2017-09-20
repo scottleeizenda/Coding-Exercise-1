@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -31,15 +27,17 @@ namespace IzendaCourseManagementSystem
         /// <summary>
         ///     Searches through the Course table to find a Course with an ID matching the param id. If parameter 'query' is null,
         ///     searches through the entire Course table. Otherwise, uses the query to subset the Course table to search through.
-        ///     Returns a new Course object with the same field values from the database upon success. Otherwise, returns null.
         /// </summary>
+        /// <param name="connection">Connection object to the database</param>
+        /// <param name="query">An optional param that if specified, this will be the query to use for the SqlDataAdapter</param>
+        /// <param name="id">ID of the course to search for in the Course table</param>
+        /// <returns>Returns a Course object with matching fields from the Course table, otherwise return null if not found</returns>
         public static Course SearchCourseById(SqlConnection connection, string query, int id)
         {
             if (query == null) { query = "SELECT * FROM Course"; }
 
             try
             {
-                //SqlDataAdapter adapter = new SqlDataAdapter("SELECT * FROM Course", connection);
                 SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
                 SqlCommandBuilder builder = new SqlCommandBuilder(adapter);
                 DataSet set = new DataSet();
@@ -53,8 +51,9 @@ namespace IzendaCourseManagementSystem
 
                 return new Course(id, startDate, endDate, hours, row["CourseName"].ToString(), row["CourseDescription"].ToString());
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 return null;
             }
         }
@@ -65,6 +64,11 @@ namespace IzendaCourseManagementSystem
         ///     each Student's info from their ToString() method. Returns true upon successfully displaying all
         ///     entries. Otherwise, returns false.
         /// </summary>
+        /// <param name="connection">Connection object to the database</param>
+        /// <returns>
+        ///     Returns number of rows printed, including 0 if table is empty
+        ///     Returns -1 otherwise, if a database operation went wrong
+        /// </returns>
         public int ViewRegisteredStudents(SqlConnection connection)
         {
             // SELECT only the students registered for the specified course
@@ -92,8 +96,9 @@ namespace IzendaCourseManagementSystem
 
                 return numRows;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 return -1;
             }
         }

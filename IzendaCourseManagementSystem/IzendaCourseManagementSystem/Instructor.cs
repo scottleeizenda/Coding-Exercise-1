@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -17,17 +13,23 @@ namespace IzendaCourseManagementSystem
             : base (id, firstName, lastName, userName, password)
         {
             HireDate = hireDate;
-            UserType = "Instructor";
+            UserType = UserType.Instructor;
         }
         
         /// <summary>
         ///     Submits a final grade for a Student for a Course by inserting a new row into the CourseGrades and Student_CourseGrades
         ///     tables. The specified Student will then have his/her CreditHours updated if the final grade was at least a 'C'. Then
-        ///     finally the course is deregistered for the Student by calling the Student's deregister method. Returns true upon
-        ///     successfully completing all these tasks. Otherwise, returns false
+        ///     finally the course is deregistered for the Student by calling the Student's deregister method.
         ///     TODO - consider changing return type to int to create more meaningful user response
         ///          - also consider using transaction for all the above tasks
         /// </summary>
+        /// <param name="connection">Connection object for the database</param>
+        /// <param name="selectedStudent">Student to submit a final grade for</param>
+        /// <param name="letterGrade">The letter grade for the CourseGrade</param>
+        /// <param name="courseId">The ID of the Course the grade will be submitted for</param>
+        /// <param name="creditHours">The Course's credit hour value to add to the Student's total hours</param>
+        /// <param name="courseGradeId">The ID to assign as a PK for a new CourseGrades row in the DB</param>
+        /// <returns>Returns true if all operations successfully go through, false otherwise</returns>
         public bool SubmitFinalGrade(SqlConnection connection, Student selectedStudent, string letterGrade, int courseId, int creditHours, int courseGradeId)
         {
             if (letterGrade.Equals("A", StringComparison.OrdinalIgnoreCase) ||
@@ -94,8 +96,9 @@ namespace IzendaCourseManagementSystem
                         return false;
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Console.WriteLine(ex);
                     return false;
                 }
             }
@@ -146,7 +149,7 @@ namespace IzendaCourseManagementSystem
                 // otherwise, proceed to getting user input on course to submit a grade for
                 Course selectedCourse;
                 Student selectedStudent;
-                // query to retrieve courses assigned to this Instructor
+                // query to retrieve full course info of courses assigned to this Instructor
                 string assignedCoursesQuery = "SELECT Course.Id, Course.StartDate, Course.EndDate, Course.CreditHours, Course.CourseName, Course.CourseDescription FROM Course " +
                                              $"INNER JOIN Instructor_Course ON Course.Id = Instructor_Course.CourseId WHERE Instructor_Course.InstructorId = {this.Id}";
                 //Console.WriteLine("-----------------------------------------------------------------------------");

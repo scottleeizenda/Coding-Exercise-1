@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -17,15 +13,16 @@ namespace IzendaCourseManagementSystem
             : base(id, firstName, lastName, userName, password)
         {
             HireDate = hireDate;
-            UserType = "Administrator";
+            UserType = UserType.Administrator;
         }
         
         /// <summary>
         ///    Checks if all fields in courseFields are valid, then proceeds to create and add a
         ///    new Course in the Course table of the database (INSERT INTO).
-        ///    Returns true upon successful INSERT INTO database, otherwise returns false upon any failure.
-        ///    Failure may be a bad courseField input or failure to insert into DB.
         /// </summary>
+        /// <param name="connection">Connection object for the database</param>
+        /// <param name="courseFields">Array of strings to fill in for column values of the new Course row</param>
+        /// <returns>Returns true upon successful INSERT INTO the database, otherwise returns false</returns>
         public bool CreateCourse(SqlConnection connection, string[] courseFields)
         {
             int id, hours;
@@ -74,19 +71,23 @@ namespace IzendaCourseManagementSystem
                 set.Tables[0].Rows.Add(row);
                 adapter.Update(set.Tables[0]);
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 return false;
             }
             
             return true;
         }
-        
+
         /// <summary>
         ///     Checks if all fields in courseFields are valid, where a blank ("") element means to keep that field the same as before.
         ///     If no problems with the fields, proceeds to do an UPDATE to the Course table in DB with the new specified fields.
-        ///     Returns true if UPDATE is successful, otherwise returns false.
         /// </summary>
+        /// <param name="connection">Connection object to the database</param>
+        /// <param name="currentId">ID of the Course to perform an UPDATE on</param>
+        /// <param name="courseFields">Array of strings containing column values to change the values in a Course row</param>
+        /// <returns>Returns true upon a successful UPDATE, otherwise returns false if database operation goes wrong or invalid course field.</returns>
         public bool UpdateCourse(SqlConnection connection, int currentId, string[] courseFields)
         {
             // courseFields should be exactly 6 elements, matches exactly with Course columns in DB
@@ -173,8 +174,9 @@ namespace IzendaCourseManagementSystem
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 return false;
             }
         }
@@ -182,9 +184,10 @@ namespace IzendaCourseManagementSystem
         /// <summary>
         ///     Method used mainly for Administrator actions 'CreateCourse' and 'UpdateCourse'. Received user input
         ///     for course fields to fill out for a row in the Course table. Console output messages differ slightly
-        ///     depending on actionType parameter which just signifies what database action is the messages for ('1'
-        ///     for CreateCourse, '2' for UpdateCourse').
+        ///     depending on actionType parameter which just signifies what database action is the messages for.
         /// </summary>
+        /// <param name="actionType">Int specifying an insert (2) or an update update (3) action</param>
+        /// <returns>Array of strings containing the column values for a Course</returns>
         public string[] ReceiveCourseFields(int actionType)
         {
             string extra;
@@ -210,9 +213,11 @@ namespace IzendaCourseManagementSystem
         }
         
         /// <summary>
-        ///     Deletes a Course from the Course table in the database. Returns true upon success, false if anything
-        ///     goes wrong and delete fails.
+        ///     Deletes a Course from the Course table in the database.
         /// </summary>
+        /// <param name="connection">Connection object to the database</param>
+        /// <param name="courseId">ID of the Course to delete from database table</param>
+        /// <returns>Returns true upon a successful DELETE, otherwise returns false if database operation goes wrong.</returns>
         public bool DeleteCourse(SqlConnection connection, int courseId)
         {
             try
@@ -229,17 +234,22 @@ namespace IzendaCourseManagementSystem
                 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 return false;
             }
         }
         
         /// <summary>
         ///     Displays all available Instructors that an Administrator can assign a Course to, pulled from the Instructor table.
-        ///     Returns false if somehow something goes wrong. Otherwise, successfully displays and returns true.
         /// </summary>
-        public bool ViewInstructors(SqlConnection connection)
+        /// <param name="connection">Connection object to the database</param>
+        /// <returns>
+        ///     Returns the number of rows printed, including 0 if table was empty.
+        ///     Returns -1 otherwise, if a database operation went wrong.
+        /// </returns>
+        public int ViewInstructors(SqlConnection connection)
         {
             try
             {
@@ -247,6 +257,12 @@ namespace IzendaCourseManagementSystem
                 DataSet set = new DataSet();
                 adapter.Fill(set, "Instructor");
                 DataTable table = set.Tables[0];
+                // check for empty table
+                int numRows = table.Rows.Count;
+                if (numRows == 0)
+                {
+                    return 0;
+                }
 
                 Console.WriteLine("-----------------------------------------------------------------------------");
                 foreach (DataRow row in table.Rows)
@@ -259,11 +275,12 @@ namespace IzendaCourseManagementSystem
                 }
                 Console.WriteLine("-----------------------------------------------------------------------------");
 
-                return true;
+                return numRows;
             }
-            catch
+            catch (Exception ex)
             {
-                return false;
+                Console.WriteLine(ex);
+                return -1;
             }
         }
 
@@ -271,6 +288,10 @@ namespace IzendaCourseManagementSystem
         ///     Assigns an Instructor to a Course by adding an entry to the Instructor_Course associative table.
         ///     The table has a pairing of an Instructor's ID and Course's ID.
         /// </summary>
+        /// <param name="connection">Connection object to the database</param>
+        /// <param name="selectedCourse">Course that an Instructor will be assigned to teach</param>
+        /// <param name="selectedInstructor">Instructor that will be assign to teach a Course</param>
+        /// <returns>Returns true upon a successful INSERT, otherwise returns false from database operation gone wrong</returns>
         public bool AssignInstructor(SqlConnection connection, Course selectedCourse, Instructor selectedInstructor)
         {
             // TODO? - Prevent any duplicate entries? May not be necessary if Instructor is allowed to teach multiple
@@ -282,7 +303,6 @@ namespace IzendaCourseManagementSystem
             adapter.Fill(set, "Instructor_Course");
             DataRow row = set.Tables["Instructor_Course"].NewRow();
             row["Id"] = Program.assignInstructorIdNumber;
-            Program.assignInstructorIdNumber++;
             row["InstructorId"] = selectedInstructor.Id;
             row["CourseId"] = selectedCourse.Id;
             try
@@ -292,8 +312,9 @@ namespace IzendaCourseManagementSystem
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 return false;
             }
         }
@@ -434,14 +455,20 @@ namespace IzendaCourseManagementSystem
             }
             else // assign instructor
             {
-                // TODO? - consider adding check for empty tables to end this action earlier
+                // check for empty Instructor table
+                int instructorCourseStatus = this.ViewInstructors(connection);
+                if (instructorCourseStatus == 0)
+                {
+                    Console.WriteLine("There are currently no instructors to assign a course to.");
+                    Console.WriteLine("-----------------------------------------------------------------------------");
+                    return false;
+                }
 
                 Instructor selectedInstructor;
                 Course selectedCourse;
                 // loop for user input on selecting an instructor
                 while (true)
                 {
-                    Console.WriteLine("-----------------------------------------------------------------------------");
                     Console.WriteLine("Type the ID of the instructor you would like to assign a course to");
                     Console.WriteLine("[Enter 'list' to see all the available instructors]");
                     Console.Write("[Enter 'quit' to cancel]: ");
@@ -489,6 +516,7 @@ namespace IzendaCourseManagementSystem
                                         bool status = this.AssignInstructor(connection, selectedCourse, selectedInstructor);
                                         if (status)
                                         {
+                                            Program.assignInstructorIdNumber++; // increment ID to keep unique ID's coming
                                             Console.WriteLine($"Instructor {selectedInstructor.FirstName} {selectedInstructor.LastName} has been assigned to teach course {selectedCourse.CourseName}");
                                             Console.WriteLine("-----------------------------------------------------------------------------");
                                             return true;

@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -16,7 +12,7 @@ namespace IzendaCourseManagementSystem
         public string LastName { get; set; }
         public string UserName { get; set; }
         public string Password { get; set; }
-        public string UserType { get; set; }
+        public UserType UserType { get; set; }
         
         public User(int id, string firstName, string lastName, string userName, string password)
         {
@@ -25,14 +21,16 @@ namespace IzendaCourseManagementSystem
             LastName = lastName;
             UserName = userName;
             Password = password;
-            UserType = "Undefined";
+            UserType = UserType.Undefined;
         }
 
         /// <summary>
         ///     Overloaded Method. Displays available courses from the Course table depending on the prefix parameter.
         ///     If prefix is null, displays all existing courses. Otherwise, displays courses filtered by the prefix.
-        ///     Returns the number of rows displayed, or returns -1 if database operation goes wrong.
         /// </summary>
+        /// <param name="connection">Connection object to the database</param>
+        /// <param name="prefix">1-4 letter prefix to filter courses by (filters by CourseName), can be null</param>
+        /// <returns>Returns number of rows printed from the PerformViewCourses method, otherwise returns -1</returns>
         public int ViewCourses(SqlConnection connection, string prefix)
         {
             // if prefix param is null, show all courses. else show courses filtered by prefix
@@ -54,12 +52,15 @@ namespace IzendaCourseManagementSystem
         ///     Parameter userType will specify what type of ID to read userId as where '2' is for Instructor and
         ///     '3' is for Student. Intaking an Instructor ID will pass a query to the PerformViewCourses method
         ///     to print an Instructor's assigned courses. Intaking a Student ID will pass a query to print the
-        ///     specified Student's registered courses. Returns -1 upon invalid userType, otherwise returns value
-        ///     from PerformViewCourses method.
+        ///     specified Student's registered courses.
         /// </summary>
+        /// <param name="connection">Connection object to the database</param>
+        /// <param name="userId">ID of an Instructor or a Student, should correspond with userType param</param>
+        /// <param name="userType">Int specifying which query to use, '2' for Instructor assigned courses, '3' for Student registered courses</param>
+        /// <returns>Returns number of rows printed from the PerformViewCourses method, otherwise returns -1</returns>
         public int ViewCourses(SqlConnection connection, int userId, int userType)
         {
-            // if prefix param is null, show all courses. else show courses filtered by prefix
+            // queries for retrieving full course info of courses assigned to an Instructor or registered courses of a Student
             string query;
             if (userType == 2) // Instructor viewing assigned courses
             {
@@ -80,11 +81,15 @@ namespace IzendaCourseManagementSystem
         }
 
         /// <summary>
-        ///     This method works in conjunction with one of the overloaded ViewCourses methods. The ViewCourses
-        ///     methods take care of the correct SELECT statement to perform, and this method accesses the database
-        ///     with it. Displays all Course column values from the produced table and returns the number of rows
-        ///     printed. Returns -1 if any database operation goes wrong.
+        ///     This method works in conjunction with one of the overloaded ViewCourses methods. The ViewCourses methods
+        ///     take care of the correct SELECT statement to perform, and this method accesses the database with it.
         /// </summary>
+        /// <param name="connection">Connection object to the database</param>
+        /// <param name="query">Query received from one of the overloaded ViewCourses methods</param>
+        /// <returns>
+        ///     Returns the number of rows printed, including 0 if the table was empty.
+        ///     Returns -1 otherwise, if a database operation goes wrong.
+        /// </returns>
         private static int PerformViewCourses(SqlConnection connection, string query)
         {
             try
@@ -115,16 +120,18 @@ namespace IzendaCourseManagementSystem
 
                 return numRows;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 return -1;
             }
         }
 
         /// <summary>
         ///     Displays all available distinct 4-letter course prefixes from the CourseName column in the Course table.
-        ///     Returns true upon succesfully displaying, returns false otherwise.
         /// </summary>
+        /// <param name="connection">Connection object to the database</param>
+        /// <returns>Returns true upon successfully printing, otherwise returns false if database operation goes wrong</returns>
         public bool ViewCoursePrefix(SqlConnection connection)
         {
             try
@@ -143,8 +150,9 @@ namespace IzendaCourseManagementSystem
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 return false;
             }
         }
@@ -152,6 +160,7 @@ namespace IzendaCourseManagementSystem
         /// <summary>
         ///     Handles user input in how he/she wants to display the courses currently in the database Course table.
         /// </summary>
+        /// <param name="connection">Connection object to the database</param>
         public void ViewCoursesHandler(SqlConnection connection)
         {
             Console.WriteLine("-----------------------------------------------------------------------------");
@@ -217,10 +226,12 @@ namespace IzendaCourseManagementSystem
 
         /// <summary>
         ///     Searches through the table of a certain user type specified by the userType parameter and finds a user with a
-        ///     matching ID as the id parameter. Returns a User with the same field values from the table row and should be
-        ///     casted as the correct specific type of user by the caller (i.e cast Administrator, Instructor, or Student).
-        ///     Otherwise, return null upon invalid userType or if a database operation goes wrong.
+        ///     matching ID as the id parameter.
         /// </summary>
+        /// <param name="connection">Connection object to the database</param>
+        /// <param name="id">ID of the User to search for</param>
+        /// <param name="userType">Specifies a certain user type to know which table to search in and return</param>
+        /// <returns>Returns a User that can be casted to a more specific User type, otherwise returns null if not found in table</returns>
         public static User SearchUserById(SqlConnection connection, int id, int userType)
         {
             // set up string with user type to paste into SqlDataAdapter
@@ -258,8 +269,9 @@ namespace IzendaCourseManagementSystem
 
                 return null;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 return null;
             }
         }

@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -150,7 +147,8 @@ namespace IzendaCourseManagementSystem
         static void Main(string[] args)
         {
             /***** Set up Database Tools and ID number generation *****/
-            connString = "Integrated Security=SSPI;Persist Security Info=False;Initial Catalog=IzendaCourseManagementSystem;Data Source=SLEE-PC";
+            //connString = "Integrated Security=SSPI;Persist Security Info=False;Initial Catalog=IzendaCourseManagementSystem;Data Source=SLEE-PC";
+            connString = ConfigurationManager.ConnectionStrings["IzendaCourseManagementSystem"].ConnectionString;
             connection = new SqlConnection(connString);
             connection.Open();
             //Console.WriteLine("Database Connection Successful!");
@@ -174,7 +172,7 @@ namespace IzendaCourseManagementSystem
             row = table.Rows[0];
             registerCourseIdNumber = int.Parse(row["MostRecentId"].ToString()) + 1;
 
-            Console.WriteLine($"{courseGradeIdNumber}, {assignInstructorIdNumber}, {registerCourseIdNumber}");
+            //Console.WriteLine($"{courseGradeIdNumber}, {assignInstructorIdNumber}, {registerCourseIdNumber}");
 
             /****** Start of the text-based user interactions ******/
             Console.WriteLine("=============================================================");
@@ -196,6 +194,7 @@ namespace IzendaCourseManagementSystem
                 // Display and handle user actions based on type of user logged in
                 if (option == 1) // Admin
                 {
+                    Console.WriteLine(CurrentAdmin.UserType);
                     Console.WriteLine("Administrator login successful.");
                     // repeat indefinitely for admin actions until quit
                     while (true)
