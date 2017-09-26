@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="49ba9ede07664410ab3393b38729db36" Name="Diagram1">
+        <EntityTypeShape EntityType="IzendaCourseManagementSystemModel.Administrator" Width="1.5" PointX="4.375" PointY="7.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="IzendaCourseManagementSystemModel.Course" Width="1.5" PointX="0.75" PointY="3.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="IzendaCourseManagementSystemModel.CourseGrade" Width="1.5" PointX="5.5" PointY="0.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="IzendaCourseManagementSystemModel.Instructor" Width="1.5" PointX="0.75" PointY="7.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="IzendaCourseManagementSystemModel.Instructor_Course" Width="1.5" PointX="3" PointY="0.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="IzendaCourseManagementSystemModel.Student" Width="1.5" PointX="8.125" PointY="3.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="IzendaCourseManagementSystemModel.Student_Course" Width="1.5" PointX="4.375" PointY="4" IsExpanded="true" />
+        <EntityTypeShape EntityType="IzendaCourseManagementSystemModel.Student_CourseGrades" Width="1.5" PointX="8.125" PointY="0.875" IsExpanded="true" />
+        <AssociationConnector Association="IzendaCourseManagementSystemModel.FK__CourseGra__Cours__300424B4" ManuallyRouted="false" />
+        <AssociationConnector Association="IzendaCourseManagementSystemModel.FK__Instructo__Cours__5DCAEF64" ManuallyRouted="false" />
+        <AssociationConnector Association="IzendaCourseManagementSystemModel.FK__Student_C__Cours__656C112C" ManuallyRouted="false" />
+        <AssociationConnector Association="IzendaCourseManagementSystemModel.FK__Student_C__Cours__619B8048" ManuallyRouted="false" />
+        <AssociationConnector Association="IzendaCourseManagementSystemModel.FK__Instructo__Instr__5CD6CB2B" ManuallyRouted="false" />
+        <AssociationConnector Association="IzendaCourseManagementSystemModel.FK__Student_C__Stude__60A75C0F" ManuallyRouted="false" />
+        <AssociationConnector Association="IzendaCourseManagementSystemModel.FK__Student_C__Stude__6477ECF3" ManuallyRouted="false" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

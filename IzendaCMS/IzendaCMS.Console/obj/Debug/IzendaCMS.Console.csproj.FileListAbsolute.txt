@@ -1,0 +1,12 @@
+C:\Users\slee\documents\visual studio 2015\Projects\IzendaCMS.Classes\IzendaCMS.Console\bin\Debug\IzendaCMS.Console.exe.config
+C:\Users\slee\documents\visual studio 2015\Projects\IzendaCMS.Classes\IzendaCMS.Console\bin\Debug\IzendaCMS.Console.exe
+C:\Users\slee\documents\visual studio 2015\Projects\IzendaCMS.Classes\IzendaCMS.Console\bin\Debug\IzendaCMS.Console.pdb
+C:\Users\slee\documents\visual studio 2015\Projects\IzendaCMS.Classes\IzendaCMS.Console\bin\Debug\EntityFramework.dll
+C:\Users\slee\documents\visual studio 2015\Projects\IzendaCMS.Classes\IzendaCMS.Console\bin\Debug\EntityFramework.SqlServer.dll
+C:\Users\slee\documents\visual studio 2015\Projects\IzendaCMS.Classes\IzendaCMS.Console\bin\Debug\IzendaCMS.Classes.dll
+C:\Users\slee\documents\visual studio 2015\Projects\IzendaCMS.Classes\IzendaCMS.Console\bin\Debug\IzendaCMS.Classes.pdb
+C:\Users\slee\documents\visual studio 2015\Projects\IzendaCMS.Classes\IzendaCMS.Console\bin\Debug\EntityFramework.xml
+C:\Users\slee\documents\visual studio 2015\Projects\IzendaCMS.Classes\IzendaCMS.Console\bin\Debug\EntityFramework.SqlServer.xml
+C:\Users\slee\documents\visual studio 2015\Projects\IzendaCMS.Classes\IzendaCMS.Console\obj\Debug\IzendaCMS.Console.csprojResolveAssemblyReference.cache
+C:\Users\slee\documents\visual studio 2015\Projects\IzendaCMS.Classes\IzendaCMS.Console\obj\Debug\IzendaCMS.Console.exe
+C:\Users\slee\documents\visual studio 2015\Projects\IzendaCMS.Classes\IzendaCMS.Console\obj\Debug\IzendaCMS.Console.pdb
