@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace IzendaCMS.DataModel.Models
 {
@@ -142,7 +138,7 @@ namespace IzendaCMS.DataModel.Models
                     return false;
                 }
             }
-            else // assign instructor
+            else if (action == 5) // assign instructor
             {
                 // check for empty Instructor table
                 int instructorCourseStatus = Utilities.ViewUsers(2);
@@ -242,6 +238,72 @@ namespace IzendaCMS.DataModel.Models
                     }
                 }
             }
+            else if (action == 6) // view assigned instructors
+            {
+                int status = Utilities.ViewAssignedInstructors();
+                if (status == -1)
+                {
+                    Console.WriteLine("Failed to display assigned instructors");
+                    return false;
+                }
+                else if (status == 0) { Console.WriteLine("No courses are assigned to any instructors."); }
+                return true;
+            }
+            else // unassign instructor
+            {
+                // check for empty Instructor table or display them if existing
+                int instructorStatus = Utilities.ViewUsers(2);
+                if (instructorStatus == 0)
+                {
+                    Console.WriteLine("There are currently no instructors in the system.");
+                    Console.WriteLine("-----------------------------------------------------------------------------");
+                    return false;
+                }
+
+                // get user input for specified instructor and course ID's
+                int courseId, instructorId;
+                Instructor selectedInstructor;
+                Console.Write("Enter the ID of the instructor you would like to unassign a course to: ");
+                if (Int32.TryParse(Console.ReadLine(), out instructorId))
+                {
+                    // check for valid instructor ID
+                    selectedInstructor = (Instructor) Utilities.SearchUserById(instructorId, 2);
+                    if (selectedInstructor == null)
+                    {
+                        Console.WriteLine("Invalid Instructor ID.");
+                        return false;
+                    }
+
+                    // check for assigned courses on this instructor and display them if so
+                    if (Utilities.ViewCourses(instructorId, 2) == 0)
+                    {
+                        Console.WriteLine($"Instructor {selectedInstructor.FirstName} {selectedInstructor.LastName} is not currently assigned to teach any courses.");
+                        return false;
+                    }
+
+                    Console.Write("Enter the ID of the course you would like to unassign from this instructor: ");
+                    if (Int32.TryParse(Console.ReadLine(), out courseId))
+                    {
+                        bool status = Utilities.UnassignInstructor(courseId, instructorId);
+                        if (status)
+                        {
+                            Console.WriteLine("Successfully unassigned instructor from course.");
+                            return true;
+                        }
+                        return false;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid input.");
+                        return false;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input.");
+                    return false;
+                }
+            }
         }
 
         /// <summary>
@@ -319,7 +381,7 @@ namespace IzendaCMS.DataModel.Models
                             while (true)
                             {
                                 // check if there are registered students
-                                if (Utilities.ViewRegisteredStudents(Utilities.CurrentStudent.Id) == 0) // check here
+                                if (Utilities.ViewRegisteredStudents(selectedCourse.Id) == 0) // check here
                                 {
                                     Console.WriteLine("There are currently no students registered for this course.");
                                     Console.WriteLine("-----------------------------------------------------------------------------");
@@ -332,7 +394,7 @@ namespace IzendaCMS.DataModel.Models
                                 input = Console.ReadLine();
                                 if (input.Equals("list", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    Utilities.ViewRegisteredStudents(Utilities.CurrentStudent.Id);
+                                    Utilities.ViewRegisteredStudents(selectedCourse.Id);
                                 }
                                 else if (input.Equals("quit", StringComparison.OrdinalIgnoreCase))
                                 {
@@ -342,7 +404,7 @@ namespace IzendaCMS.DataModel.Models
                                 }
                                 else if (Int32.TryParse(input, out id))
                                 {
-                                    selectedStudent = (Student)Utilities.SearchUserById(id, 3);
+                                    selectedStudent = Utilities.SearchRegisteredStudentById(selectedCourse.Id, id);
                                     if (selectedStudent != null)
                                     {
                                         Console.WriteLine($"Student {selectedStudent.FirstName} {selectedStudent.LastName} successfully found.");
@@ -381,7 +443,7 @@ namespace IzendaCMS.DataModel.Models
                         }
                         else
                         {
-                            Console.WriteLine($"Failed to find course with ID {id}");
+                            Console.WriteLine($"Failed to find course with ID {id} in your assigned courses.");
                             Console.WriteLine("-----------------------------------------------------------------------------");
                             continue;
                         }
@@ -514,15 +576,15 @@ namespace IzendaCMS.DataModel.Models
             else // deregister course
             {
                 // query to retrieve full course info of courses this Student is registered for
-                //string query = "SELECT Course.Id, Course.StartDate, Course.EndDate, Course.CreditHours, Course.CourseName, Course.CourseDescription FROM Course " +
-                //              $"INNER JOIN Student_Course ON Course.Id = Student_Course.CourseId WHERE Student_Course.StudentId = {this.Id}";
+                string query = "SELECT Course.Id, Course.StartDate, Course.EndDate, Course.CreditHours, Course.CourseName, Course.CourseDescription FROM Course " +
+                              $"INNER JOIN Student_Course ON Course.Id = Student_Course.CourseId WHERE Student_Course.StudentId = {Utilities.CurrentStudent.Id}";
                 Console.WriteLine("-----------------------------------------------------------------------------");
                 Console.Write("Enter the ID of the course you would like to deregister: ");
                 int id;
                 // make sure the inputted id is an int
                 if (Int32.TryParse(Console.ReadLine(), out id))
                 {
-                    Course selectedCourse = Utilities.SearchCourseById(null, id); // TODO - edit this
+                    Course selectedCourse = Utilities.SearchCourseById(query, id);
                     if (selectedCourse != null)
                     {
                         Console.WriteLine($"Course Successfully Found, attempting to remove this course from your registered courses:\n{selectedCourse}");
@@ -550,7 +612,7 @@ namespace IzendaCMS.DataModel.Models
                     }
                     else
                     {
-                        Console.WriteLine($"Failed to find course of ID '{id}'.");
+                        Console.WriteLine($"Failed to find course of ID '{id}' in your registered courses.");
                         Console.WriteLine("-----------------------------------------------------------------------------");
                         return false;
                     }
@@ -581,17 +643,17 @@ namespace IzendaCMS.DataModel.Models
                     Console.WriteLine("[Enter '3' to edit an existing course]");
                     Console.WriteLine("[Enter '4' to delete an existing course]");
                     Console.WriteLine("[Enter '5' to assign a course to an instructor]");
-                    // TODO - consider adding option to view what Instructors are assigned to what Courses
-                    // TODO - consider adding option to unassign Instructor from a Course
-                    Console.WriteLine("[Enter '6' to quit]");
+                    Console.WriteLine("[Enter '6' to view the courses assigned to instructors]");
+                    Console.WriteLine("[Enter '7' to unassign a course from an instructor]");
+                    Console.WriteLine("[Enter '8' to quit]");
 
                     if (Int32.TryParse(Console.ReadLine(), out action))
                     {
-                        if (action >= 1 && action <= 5)
+                        if (action >= 1 && action <= 7)
                         {
                             actionStatus = AdminActionHandler(action);
                         }
-                        else if (action == 6)
+                        else if (action == 8)
                         {
                             Console.WriteLine("Logging out...");
                             Console.WriteLine("-----------------------------------------------------------------------------");

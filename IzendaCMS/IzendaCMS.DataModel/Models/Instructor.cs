@@ -17,7 +17,7 @@ namespace IzendaCMS.DataModel.Models
         //public string UserName { get; set; }
         //public string Password { get; set; }
         //public string UserType { get; set; }
-        public virtual ICollection<Instructor_Course> Instructor_Course { get; set; }
+        public ICollection<Instructor_Course> Instructor_Course { get; set; }
 
         public override string ToString()
         {

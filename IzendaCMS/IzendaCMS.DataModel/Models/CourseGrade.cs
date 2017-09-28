@@ -22,6 +22,6 @@ namespace IzendaCMS.DataModel.Models
         public int CourseId { get; set; }
         public string FinalGrade { get; set; }
         public virtual Course Course { get; set; }
-        public virtual ICollection<Student_CourseGrades> Student_CourseGrades { get; set; }
+        public ICollection<Student_CourseGrades> Student_CourseGrades { get; set; }
     }
 }

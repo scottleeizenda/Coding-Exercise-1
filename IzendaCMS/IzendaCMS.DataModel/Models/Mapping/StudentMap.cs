@@ -20,6 +20,9 @@ namespace IzendaCMS.DataModel.Models.Mapping
             this.Property(t => t.LastName)
                 .HasMaxLength(50);
 
+            this.Property(t => t.GPA)
+                .IsRequired();
+
             this.Property(t => t.UserName)
                 .IsRequired()
                 .HasMaxLength(50);
@@ -31,6 +34,9 @@ namespace IzendaCMS.DataModel.Models.Mapping
             this.Property(t => t.UserType)
                 .IsRequired()
                 .HasMaxLength(15);
+
+            this.Property(t => t.CreditHours)
+                .IsRequired();
 
             this.Property(t => t.Level)
                 .HasMaxLength(15);

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace IzendaCMS.DataModel.Models
 {
@@ -274,10 +272,7 @@ namespace IzendaCMS.DataModel.Models
                         List<Administrator> admins = context.Administrators.ToList();
                         // check for empty table
                         int numRows = admins.Count;
-                        if (numRows == 0)
-                        {
-                            return 0;
-                        }
+                        if (numRows == 0) { return 0; }
 
                         Console.WriteLine("-----------------------------------------------------------------------------");
                         foreach (Administrator a in admins)
@@ -293,10 +288,7 @@ namespace IzendaCMS.DataModel.Models
                         List<Instructor> instructors = context.Instructors.ToList();
                         // check for empty table
                         int numRows = instructors.Count;
-                        if (numRows == 0)
-                        {
-                            return 0;
-                        }
+                        if (numRows == 0) { return 0; }
 
                         Console.WriteLine("-----------------------------------------------------------------------------");
                         foreach (Instructor i in instructors)
@@ -312,10 +304,7 @@ namespace IzendaCMS.DataModel.Models
                         List<Student> students = context.Students.ToList();
                         // check for empty table
                         int numRows = students.Count;
-                        if (numRows == 0)
-                        {
-                            return 0;
-                        }
+                        if (numRows == 0) { return 0; }
 
                         Console.WriteLine("-----------------------------------------------------------------------------");
                         foreach (Student s in students)
@@ -326,8 +315,7 @@ namespace IzendaCMS.DataModel.Models
 
                         return numRows;
                     }
-                    else
-                        return -1;
+                    else { return -1; } // invalid user type
                 }
                 catch (Exception ex)
                 {
@@ -346,16 +334,8 @@ namespace IzendaCMS.DataModel.Models
         /// <returns>Returns true upon a successful INSERT, otherwise returns false from database operation gone wrong</returns>
         public static bool AssignInstructor(Course selectedCourse, Instructor selectedInstructor)
         {
-            // TODO? - Prevent any duplicate entries? May not be necessary if Instructor is allowed to teach multiple
-            //         classes of the same Course.
-            
             // construct new Instructor_Course object for new row into respective table
-            Instructor_Course assignedCourse = new Instructor_Course
-            {
-                Id = AssignInstructorIdNumber,
-                InstructorId = selectedInstructor.Id,
-                CourseId = selectedCourse.Id
-            };
+            Instructor_Course assignedCourse = new Instructor_Course(AssignInstructorIdNumber, selectedInstructor.Id, selectedCourse.Id);
 
             using (IzendaCMSContext context = new IzendaCMSContext())
             {
@@ -375,11 +355,44 @@ namespace IzendaCMS.DataModel.Models
         }
 
         /// <summary>
+        ///     Unassigns an Instructor by removing the corresponding row from the Instructor_Course table specified
+        ///     through the given parameters. If more than one instance of the same Course was assigned to the specified
+        ///     Instructor, all instances of the Course will be removed from the database.
+        /// </summary>
+        /// <param name="courseId">ID of the course to unassign from instructor</param>
+        /// <param name="instructorId">ID of the instructor to unassign course from</param>
+        /// <returns>Returns true upon successfully unassigning a course, returns false otherwise</returns>
+        public static bool UnassignInstructor(int courseId, int instructorId)
+        {
+            using (IzendaCMSContext context = new IzendaCMSContext())
+            {
+                try
+                {
+                    // assignedCourses should be narrowed down to only 1 entry if only one instance of course was assigned to instructor
+                    List<Instructor_Course> assignedCourses = context.Instructor_Course.Where(ic => ic.CourseId == courseId && ic.InstructorId == instructorId).ToList();
+                    if (assignedCourses.Count == 0) { return false; }
+                    foreach (Instructor_Course ic in assignedCourses)
+                    {
+                        context.Entry(ic).State = System.Data.Entity.EntityState.Deleted;
+                    }
+                    context.SaveChanges();
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
         ///     Submits a final grade for a Student for a Course by inserting a new row into the CourseGrades and Student_CourseGrades
         ///     tables. The specified Student will then have his/her CreditHours updated if the final grade was at least a 'C'. Then
-        ///     finally the course is deregistered for the Student by calling the Student's deregister method.
+        ///     finally the course is deregistered for the Student by calling the Student's deregister method. If one of the tasks were
+        ///     to go wrong, EF should rollback the transaction.
         ///     TODO - consider changing return type to int to create more meaningful user response
-        ///          - also consider using transaction for all the above tasks
         /// </summary>
         /// <param name="selectedStudent">Student to submit a final grade for</param>
         /// <param name="letterGrade">The letter grade for the CourseGrade</param>
@@ -404,29 +417,44 @@ namespace IzendaCMS.DataModel.Models
 
                         // INSERT new row into Student_CourseGrades
                         context.Student_CourseGrades.Add(new Student_CourseGrades(courseGradeId, selectedStudent.Id, courseGradeId));
-
-                        // UPDATE Student's CreditHours if final grade is at least a 'C'
+                        
+                        // UPDATE Student's CreditHours and Level if final grade is at least a 'C'
                         if (letterGrade.ToUpper() == "A" || letterGrade.ToUpper() == "B" || letterGrade.ToUpper() == "C")
                         {
                             selectedStudent.CreditHours += creditHours;
+                            selectedStudent.Level = CalculateLevel(selectedStudent.CreditHours);
                             context.Students.Attach(selectedStudent);
                             context.Entry(selectedStudent).State = System.Data.Entity.EntityState.Modified;
-
-                            // TODO - recalculate student level and GPA
                         }
 
-                        // now deregister student regardless of what grade received
+                        // deregister student regardless of what grade received
                         Console.WriteLine("Student info updated, now attempting to deregister student from this course...");
                         int status = Utilities.DeregisterCourse(selectedStudent.Id, courseId);
                         if (status == 1)
                         {
                             context.SaveChanges();
-                            return true;
                         }
-                        else
-                        {
-                            return false;
-                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex);
+                        return false;
+                    }
+                }
+
+                // separate context to use the saved changes from previous context, uses newly updated tables
+                // to calculate GPA (i.e includes the newly added row in Student_CourseGrades)
+                using (IzendaCMSContext context = new IzendaCMSContext())
+                {
+                    try
+                    {
+                        // Update GPA
+                        selectedStudent.GPA = CalculateGPA(selectedStudent.Id);
+                        context.Students.Attach(selectedStudent);
+                        context.Entry(selectedStudent).State = System.Data.Entity.EntityState.Modified;
+                        context.SaveChanges();
+
+                        return true;
                     }
                     catch (Exception ex)
                     {
@@ -436,6 +464,52 @@ namespace IzendaCMS.DataModel.Models
                 }
             }
             return false; // invalid letterGrade
+        }
+
+        /// <summary>
+        ///     Takes in the number of CreditHours for a Student and returns a string representing the Student's grade Level.
+        /// </summary>
+        /// <param name="hours">The total credit hours to convert to a certain grade level</param>
+        /// <returns>A string representing the Student's grade level</returns>
+        public static string CalculateLevel(int hours)
+        {
+            if (hours >= 0 && hours < 30) { return "Freshman"; }
+            else if (hours >= 30 && hours < 60) { return "Sophomore"; }
+            else if (hours >= 60 && hours < 90) { return "Junior"; }
+            else if (hours >= 90) { return "Senior"; }
+            else { return "Undefined"; }
+        }
+
+        /// <summary>
+        ///     Calculates a student's GPA by retrieving the necessary data from a LINQ query and traversing through
+        ///     the acquired list to calculate an average.
+        /// </summary>
+        /// <param name="studentId">ID of the student to calculate GPA for</param>
+        /// <returns>The specified student's calculated GPA</returns>
+        public static double CalculateGPA(int studentId)
+        {
+            using (IzendaCMSContext context = new IzendaCMSContext())
+            {
+                var finalGrades = (from cg in context.CourseGrades
+                                   join scg in context.Student_CourseGrades on cg.Id equals scg.CourseGradesId
+                                   where scg.StudentId == studentId
+                                   select new
+                                   {
+                                       finalGrade = cg.FinalGrade,
+                                   });
+                double sum = 0;
+                int count = 0;
+                foreach (var grade in finalGrades)
+                {
+                    if (grade.finalGrade == "A") { sum += 4; }
+                    else if (grade.finalGrade == "B") { sum += 3; }
+                    else if (grade.finalGrade == "C") { sum += 2; }
+                    else if (grade.finalGrade == "D") { sum += 1; }
+                    count++;
+                }
+                //Console.WriteLine($"{sum}, {count}, {sum / count}");
+                return sum / count;
+            }
         }
 
         /// <summary>
@@ -453,8 +527,6 @@ namespace IzendaCMS.DataModel.Models
             {
                 try
                 {
-                    //string query = "SELECT CourseGrades.CourseId, CourseGrades.FinalGrade, Student_CourseGrades.StudentId FROM CourseGrades " +
-                    //              $"INNER JOIN Student_CourseGrades ON CourseGrades.Id = Student_CourseGrades.CourseGradesId WHERE Student_CourseGrades.StudentId = {studentId}";
                     var finalGrades = (from cg in context.CourseGrades
                                        join scg in context.Student_CourseGrades on cg.Id equals scg.CourseGradesId
                                        where scg.StudentId == studentId
@@ -462,7 +534,6 @@ namespace IzendaCMS.DataModel.Models
                                        {
                                            courseId = cg.CourseId,
                                            finalGrade = cg.FinalGrade,
-                                           //studentId = scg.StudentId
                                        });
                     int numRows = finalGrades.ToList().Count;
 
@@ -513,24 +584,23 @@ namespace IzendaCMS.DataModel.Models
                 try
                 {
                     // Check if student is already registered for this course
-                    string registeredQuery = $"SELECT Id, StudentId, CourseId FROM Student_Course WHERE StudentId = {studentId}";
-                    //Student_Course registeredCourse = context.Student_Course.SqlQuery(registeredQuery).SingleOrDefault();
+                    /*string registeredQuery = $"SELECT Id, StudentId, CourseId FROM Student_Course WHERE StudentId = {studentId}";
                     List<Student_Course> registeredCourses = context.Student_Course.SqlQuery(registeredQuery).Where(sc => sc.CourseId == courseId).ToList();
-                    //if (registeredCourse.CourseId == courseId) { return -1; }
-                    //if (registeredCourses == null) { return -1; }
-                    if (registeredCourses.Count >= 1) { return -1; }
+                    if (registeredCourses.Count >= 1) { return -1; }*/
+                    Student selectedStudent = context.Students.Find(studentId);
+                    context.Entry(selectedStudent).Collection(s => s.Student_Course).Load();
+                    foreach (Student_Course sc in selectedStudent.Student_Course)
+                    {
+                        if (sc.CourseId == courseId) { return -1; }
+                    }
 
                     // Check if student has already taken this course
-                    //string query = "SELECT CourseGrades.CourseId, CourseGrades.FinalGrade, Student_CourseGrades.StudentId FROM CourseGrades " +
-                    //              $"INNER JOIN Student_CourseGrades ON CourseGrades.Id = Student_CourseGrades.CourseGradesId WHERE Student_CourseGrades.StudentId = {this.Id}";
-                    var checkCompleted = (from cg in context.CourseGrades
+                    /*var checkCompleted = (from cg in context.CourseGrades
                                           join scg in context.Student_CourseGrades on cg.Id equals scg.CourseGradesId
                                           where scg.StudentId == studentId
                                           select new
                                           {
-                                              courseId = cg.CourseId,
-                                              //finalGrade = cg.FinalGrade,
-                                              //studentId = scg.StudentId
+                                              courseId = cg.CourseId
                                           });
                     foreach (var x in checkCompleted)
                     {
@@ -538,6 +608,13 @@ namespace IzendaCMS.DataModel.Models
                         {
                             return -2;
                         }
+                    }*/
+                    context.Entry(selectedStudent).Collection(s => s.Student_CourseGrades).Load();
+                    foreach (Student_CourseGrades scg in selectedStudent.Student_CourseGrades)
+                    {
+                        // course ID not in Student_CourseGrades table, so look it up
+                        CourseGrade cg = context.CourseGrades.Find(scg.CourseGradesId);
+                        if (cg.CourseId == courseId) { return -2; }
                     }
 
                     // Otherwise, good to register for course by inserting new row
@@ -835,6 +912,58 @@ namespace IzendaCMS.DataModel.Models
         }
 
         /// <summary>
+        ///     Searches through the table of a certain user type specified by the userType parameter and finds a user with a
+        ///     matching ID as the id parameter. If a query is defined, searches for user in the newly specified table.
+        /// </summary>
+        /// <param name="query">Query to specify a more refined table, or can be null to search entire table by default</param>
+        /// <param name="id">ID of the User to search for</param>
+        /// <param name="userType">Specifies a certain user type to know which table to search in and return</param>
+        /// <returns>Returns a User that can be casted to a more specific User type, otherwise returns null if not found in table</returns>
+        public static User SearchUserById(string query, int id, int userType)
+        {
+            using (IzendaCMSContext context = new IzendaCMSContext())
+            {
+                try
+                {
+                    if (userType == 1)
+                    {
+                        if (query == null) { return context.Administrators.Find(id); }
+                        else
+                        {
+                            List<Administrator> newAdminList = context.Administrators.SqlQuery(query).ToList();
+                            return newAdminList.Find(a => a.Id == id);
+                        }
+                    }
+                    else if (userType == 2)
+                    {
+                        if (query == null) { return context.Instructors.Find(id); }
+                        else
+                        {
+                            List<Instructor> newInstructorList = context.Instructors.SqlQuery(query).ToList();
+                            return newInstructorList.Find(i => i.Id == id);
+                        }
+                    }
+                    else if (userType == 3)
+                    {
+                        if (query == null) { return context.Students.Find(id); }
+                        else
+                        {
+                            List<Student> newStudentList = context.Students.SqlQuery(query).ToList();
+                            return newStudentList.Find(s => s.Id == id);
+                        }
+                    }
+
+                    return null;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
         ///     Searches through the Course table to find a Course with an ID matching the param id. If parameter 'query' is null,
         ///     searches through the entire Course table. Otherwise, uses the query to subset the Course table to search through.
         /// </summary>
@@ -843,13 +972,49 @@ namespace IzendaCMS.DataModel.Models
         /// <returns>Returns a Course object with matching fields from the Course table, otherwise return null if not found</returns>
         public static Course SearchCourseById(string query, int id)
         {
-            if (query == null) { query = "SELECT * FROM Course"; }
             using (IzendaCMSContext context = new IzendaCMSContext())
             {
                 try
                 {
-                    // TODO - search custom query
-                    return context.Courses.Find(id);
+                    if (query == null)
+                    {
+                        return context.Courses.Find(id);
+                    }
+                    else
+                    {
+                        List<Course> newCourseList = context.Courses.SqlQuery(query).ToList();
+                        return newCourseList.Find(c => c.Id == id);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Searches through the table of a certain user type specified by the userType parameter and finds a user with a
+        ///     matching ID as the id parameter. If a query is defined, searches for user in the newly specified table.
+        /// </summary>
+        /// <param name="query">Query to specify a more refined table, or can be null to search entire table by default</param>
+        /// <param name="id">ID of the User to search for</param>
+        /// <param name="userType">Specifies a certain user type to know which table to search in and return</param>
+        /// <returns>Returns a User that can be casted to a more specific User type, otherwise returns null if not found in table</returns>
+        public static Student SearchRegisteredStudentById(int courseId, int studentId)
+        {
+            using (IzendaCMSContext context = new IzendaCMSContext())
+            {
+                string query = $"SELECT * FROM Student_Course WHERE CourseID = {courseId}";
+
+                try
+                {
+                    List<Student_Course> registeredStudents = context.Student_Course.SqlQuery(query).ToList();
+                    Student_Course sc = registeredStudents.Find(s => s.StudentId == studentId);
+                    if (sc != null) { return (Student)SearchUserById(sc.StudentId, 3); }
+
+                    return null;
                 }
                 catch (Exception ex)
                 {
@@ -870,16 +1035,16 @@ namespace IzendaCMS.DataModel.Models
         ///     Returns number of rows printed, including 0 if table is empty
         ///     Returns -1 otherwise, if a database operation went wrong
         /// </returns>
-        public static int ViewRegisteredStudents(int studentId)
+        public static int ViewRegisteredStudents(int courseId)
         {
             // SELECT only the students registered for the specified course
-            string query = $"SELECT * FROM Student_Course WHERE CourseID = {studentId}";
+            string query = $"SELECT * FROM Student_Course WHERE CourseID = {courseId}";
 
             using (IzendaCMSContext context = new IzendaCMSContext())
             {
                 try
                 {
-                    List<Student> registeredStudents = context.Students.SqlQuery(query).ToList();
+                    List<Student_Course> registeredStudents = context.Student_Course.SqlQuery(query).ToList();
                     int numRows = registeredStudents.Count;
                     // check if empty
                     if (numRows == 0)
@@ -888,9 +1053,10 @@ namespace IzendaCMS.DataModel.Models
                     }
 
                     Console.WriteLine("-----------------------------------------------------------------------------");
-                    foreach (Student s in registeredStudents)
+                    foreach (Student_Course sc in registeredStudents)
                     {
-                        Console.WriteLine(s);
+                        // Search for student to display full student info rather than just ID
+                        Console.WriteLine((Student)SearchUserById(sc.StudentId, 3));
                     }
                     Console.WriteLine("-----------------------------------------------------------------------------");
 
@@ -903,6 +1069,43 @@ namespace IzendaCMS.DataModel.Models
                 }
             }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public static int ViewAssignedInstructors()
+        {
+            using (IzendaCMSContext context = new IzendaCMSContext())
+            {
+                try
+                {
+                    List<Instructor_Course> assignedInstructors = context.Instructor_Course.ToList();
+                    // TODO - consider sorting the list
+                    // check for empty table
+                    int numRows = assignedInstructors.Count;
+                    if (numRows == 0) { return 0; }
+
+                    Console.WriteLine("-----------------------------------------------------------------------------");
+                    foreach (Instructor_Course ic in assignedInstructors)
+                    {
+                        // Search for instructor and course to display more meaningful info than ID numbers
+                        Instructor currentInstructor = (Instructor)Utilities.SearchUserById(ic.InstructorId, 2);
+                        Course currentCourse = Utilities.SearchCourseById(null, ic.CourseId);
+                        Console.WriteLine($"{currentInstructor.FirstName} {currentInstructor.LastName} --> {currentCourse.CourseName}");
+                    }
+                    Console.WriteLine("-----------------------------------------------------------------------------");
+
+                    return numRows;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                    return -1;
+                }
+            }
+        }
+        
 
         /// <summary>
         ///     Accesses the database to check inputted credentials with the ones stored in the database. Which table is

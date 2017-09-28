@@ -5,6 +5,8 @@ namespace IzendaCMS.DataModel.Models
 {
     public partial class Student_CourseGrades
     {
+        public Student_CourseGrades() { }
+
         public Student_CourseGrades(int id, int studentId, int courseGradesId)
         {
             Id = id;

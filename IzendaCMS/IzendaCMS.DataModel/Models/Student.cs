@@ -14,19 +14,19 @@ namespace IzendaCMS.DataModel.Models
         //public int Id { get; set; }
         //public string FirstName { get; set; }
         //public string LastName { get; set; }
-        public Nullable<double> GPA { get; set; }
+        public double GPA { get; set; }
         //public string UserName { get; set; }
         //public string Password { get; set; }
-        public Nullable<int> CreditHours { get; set; }
+        public int CreditHours { get; set; }
         //public string UserType { get; set; }
         public string Level { get; set; }
         //public Level Level { get; set; }
-        public virtual ICollection<Student_CourseGrades> Student_CourseGrades { get; set; }
-        public virtual ICollection<Student_Course> Student_Course { get; set; }
+        public ICollection<Student_CourseGrades> Student_CourseGrades { get; set; }
+        public ICollection<Student_Course> Student_Course { get; set; }
 
         public override string ToString()
         {
-            return $"Student Id: {Id}\nName: {LastName}, {FirstName}\nCredit Hours Earned: {CreditHours}\nGPA: {GPA}\nGrade Level: {Level}\n";
+            return $"Student Id: {Id}\nName: {LastName}, {FirstName}\nCredit Hours Earned: {CreditHours}\nGPA: {GPA.ToString("0.###")}\nGrade Level: {Level}\n";
         }
     }
 }

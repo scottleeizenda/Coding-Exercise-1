@@ -1,10 +1,8 @@
-﻿using IzendaCMS.DataModel.Models;
+﻿using IzendaCMS.DataModel;
+using IzendaCMS.DataModel.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Configuration;
 
 namespace IzendaCMS.ConsoleApp
 {
@@ -12,33 +10,6 @@ namespace IzendaCMS.ConsoleApp
     {
         static void Main(string[] args)
         {
-            Course course = new Course
-            {
-                Id = 1000,
-                StartDate = DateTime.Parse("01/01/2000"),
-                EndDate = DateTime.Parse("01/01/2001"),
-                CreditHours = 6,
-                CourseName = "Test",
-                CourseDescription = "TestDesc"
-            };
-
-            using (var ctx = new IzendaCMSContext())
-            {
-                List<Course> courses = ctx.Courses.ToList();
-                List<Course> courses2 = ctx.Courses.Where(c => c.CreditHours == 3).ToList();
-                
-                courses = ctx.Courses.ToList();
-                //var query = context.Course;
-                foreach (Course c in courses)
-                {
-                    Console.WriteLine($"{c.Id}, {c.CourseName}, {c.CourseDescription}");
-                }
-                foreach (Course c in courses2)
-                {
-                    Console.WriteLine($"{c.CreditHours}, {c.CourseName}, {c.CourseDescription}");
-                }
-            }
-
             using (var ctx = new IzendaCMSContext())
             {
                 var checkCompletionQuery = (from cg in ctx.CourseGrades
@@ -54,6 +25,31 @@ namespace IzendaCMS.ConsoleApp
                 foreach (var x in checkCompletionQuery)
                 {
                     Console.WriteLine($"{x.courseId} | {x.finalGrade} | {x.studentId}");
+                }
+
+                string assignedCoursesQuery = "SELECT Course.Id, Course.StartDate, Course.EndDate, Course.CreditHours, Course.CourseName, Course.CourseDescription FROM Course " +
+                                 $"INNER JOIN Instructor_Course ON Course.Id = Instructor_Course.CourseId WHERE Instructor_Course.InstructorId = 102";
+
+                List<Course> courses = ctx.Courses.SqlQuery(assignedCoursesQuery).ToList();
+                Course co = courses.Find(c => c.Id == 10001302);
+                if (co == null) { Console.WriteLine("NULLLL"); }
+
+                //ctx.Database.Log = Console.WriteLine;
+                Student s = ctx.Students.Find(5002);
+                ctx.Entry(s).Collection(reg => reg.Student_Course).Load();
+                ctx.Entry(s).Collection(grades => grades.Student_CourseGrades).Load();
+                Console.WriteLine(Utilities.CalculateGPA(s.Id));
+                Console.WriteLine($"Courses: {s.Student_Course.Count}, Grades: {s.Student_CourseGrades.Count}");
+                try
+                {
+                    foreach (Student_CourseGrades scg in s.Student_CourseGrades)
+                    {
+                        Console.WriteLine(scg.CourseGrade.FinalGrade);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
                 }
             }
 
