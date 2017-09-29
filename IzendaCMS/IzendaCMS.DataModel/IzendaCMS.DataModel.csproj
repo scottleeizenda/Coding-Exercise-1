@@ -55,6 +55,7 @@
     <Compile Include="Models\CourseGrade.cs" />
     <Compile Include="Models\Enums\Level.cs" />
     <Compile Include="Models\Enums\UserType.cs" />
+    <Compile Include="Models\Interfaces\IModificationHistory.cs" />
     <Compile Include="Models\Instructor.cs" />
     <Compile Include="Models\Instructor_Course.cs" />
     <Compile Include="Models\IzendaCMSContext.cs" />
@@ -71,6 +72,7 @@
     <Compile Include="Models\Student_CourseGrades.cs" />
     <Compile Include="Models\User.cs" />
     <Compile Include="Models\Utilities.cs" />
+    <Compile Include="Models\Viewer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

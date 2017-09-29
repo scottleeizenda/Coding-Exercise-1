@@ -37,7 +37,7 @@ namespace IzendaCMS.DataModel.Models
             }
             else if (action == 2) // view courses
             {
-                Utilities.ViewCoursesHandler();
+                Viewer.ViewCoursesHandler();
                 return true;
             }
             else if (action == 3) // edit course
@@ -141,7 +141,7 @@ namespace IzendaCMS.DataModel.Models
             else if (action == 5) // assign instructor
             {
                 // check for empty Instructor table
-                int instructorCourseStatus = Utilities.ViewUsers(2);
+                int instructorCourseStatus = Viewer.ViewUsers(2);
                 if (instructorCourseStatus == 0)
                 {
                     Console.WriteLine("There are currently no instructors to assign a course to.");
@@ -161,7 +161,7 @@ namespace IzendaCMS.DataModel.Models
                     int id;
                     if (input.Equals("list", StringComparison.OrdinalIgnoreCase))
                     {
-                        Utilities.ViewUsers(2);
+                        Viewer.ViewUsers(2);
                     }
                     else if (input.Equals("quit", StringComparison.OrdinalIgnoreCase))
                     {
@@ -185,7 +185,7 @@ namespace IzendaCMS.DataModel.Models
                                 input = Console.ReadLine();
                                 if (input.Equals("list", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    Utilities.ViewCourses(null);
+                                    Viewer.ViewCourses(null);
                                 }
                                 else if (input.Equals("quit", StringComparison.OrdinalIgnoreCase))
                                 {
@@ -240,7 +240,7 @@ namespace IzendaCMS.DataModel.Models
             }
             else if (action == 6) // view assigned instructors
             {
-                int status = Utilities.ViewAssignedInstructors();
+                int status = Viewer.ViewAssignedInstructors();
                 if (status == -1)
                 {
                     Console.WriteLine("Failed to display assigned instructors");
@@ -252,7 +252,7 @@ namespace IzendaCMS.DataModel.Models
             else // unassign instructor
             {
                 // check for empty Instructor table or display them if existing
-                int instructorStatus = Utilities.ViewUsers(2);
+                int instructorStatus = Viewer.ViewUsers(2);
                 if (instructorStatus == 0)
                 {
                     Console.WriteLine("There are currently no instructors in the system.");
@@ -275,7 +275,7 @@ namespace IzendaCMS.DataModel.Models
                     }
 
                     // check for assigned courses on this instructor and display them if so
-                    if (Utilities.ViewCourses(instructorId, 2) == 0)
+                    if (Viewer.ViewCourses(instructorId, 2) == 0)
                     {
                         Console.WriteLine($"Instructor {selectedInstructor.FirstName} {selectedInstructor.LastName} is not currently assigned to teach any courses.");
                         return false;
@@ -320,19 +320,19 @@ namespace IzendaCMS.DataModel.Models
         {
             if (action == 1) // view courses
             {
-                Utilities.ViewCoursesHandler();
+                Viewer.ViewCoursesHandler();
                 return true;
             }
             else if (action == 2) // view assigned
             {
-                int status = Utilities.ViewCourses(Utilities.CurrentInstructor.Id, 2);
+                int status = Viewer.ViewCourses(Utilities.CurrentInstructor.Id, 2);
                 if (status == -1) { return false; }
                 else { return true; }
             }
             else // submit final grades
             {
                 // check if instructor has any courses assigned or error in database operation
-                int coursesStatus = Utilities.ViewCourses(Utilities.CurrentInstructor.Id, 2);
+                int coursesStatus = Viewer.ViewCourses(Utilities.CurrentInstructor.Id, 2);
                 if (coursesStatus == 0)
                 {
                     Console.WriteLine("You are not currently assigned to teach any courses.");
@@ -362,7 +362,7 @@ namespace IzendaCMS.DataModel.Models
                     int id;
                     if (input.Equals("list", StringComparison.OrdinalIgnoreCase))
                     {
-                        Utilities.ViewCourses(Utilities.CurrentInstructor.Id, 2);
+                        Viewer.ViewCourses(Utilities.CurrentInstructor.Id, 2);
                     }
                     else if (input.Equals("quit", StringComparison.OrdinalIgnoreCase))
                     {
@@ -381,7 +381,7 @@ namespace IzendaCMS.DataModel.Models
                             while (true)
                             {
                                 // check if there are registered students
-                                if (Utilities.ViewRegisteredStudents(selectedCourse.Id) == 0) // check here
+                                if (Viewer.ViewRegisteredStudents(selectedCourse.Id) == 0) // check here
                                 {
                                     Console.WriteLine("There are currently no students registered for this course.");
                                     Console.WriteLine("-----------------------------------------------------------------------------");
@@ -394,7 +394,7 @@ namespace IzendaCMS.DataModel.Models
                                 input = Console.ReadLine();
                                 if (input.Equals("list", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    Utilities.ViewRegisteredStudents(selectedCourse.Id);
+                                    Viewer.ViewRegisteredStudents(selectedCourse.Id);
                                 }
                                 else if (input.Equals("quit", StringComparison.OrdinalIgnoreCase))
                                 {
@@ -473,12 +473,12 @@ namespace IzendaCMS.DataModel.Models
         {
             if (action == 1) // view courses
             {
-                Utilities.ViewCoursesHandler();
+                Viewer.ViewCoursesHandler();
                 return true;
             }
             else if (action == 2) // view registered
             {
-                int status = Utilities.ViewCourses(Utilities.CurrentStudent.Id, 3);
+                int status = Viewer.ViewCourses(Utilities.CurrentStudent.Id, 3);
                 if (status == 0)
                 {
                     Console.WriteLine("-----------------------------------------------------------------------------");
@@ -505,7 +505,7 @@ namespace IzendaCMS.DataModel.Models
             }
             else if (action == 4) // view grades
             {
-                int status = Utilities.ViewFinalGrades(Utilities.CurrentStudent.Id);
+                int status = Viewer.ViewFinalGrades(Utilities.CurrentStudent.Id);
                 if (status == 0)
                 {
                     Console.WriteLine("-----------------------------------------------------------------------------");

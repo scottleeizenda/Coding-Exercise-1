@@ -1,4 +1,4 @@
-﻿namespace IzendaCMS.DataModel
+﻿namespace IzendaCMS.DataModel.Models
 {
     public enum UserType
     {

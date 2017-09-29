@@ -12,6 +12,19 @@ namespace IzendaCMS.DataModel.Models
             this.Student_Course = new List<Student_Course>();
         }
 
+        public Course(int id, DateTime startDate, DateTime endDate, int hours, string name, string description)
+        {
+            Id = id;
+            StartDate = startDate;
+            EndDate = endDate;
+            CreditHours = hours;
+            CourseName = name;
+            CourseDescription = description;
+            this.CourseGrades = new List<CourseGrade>();
+            this.Instructor_Course = new List<Instructor_Course>();
+            this.Student_Course = new List<Student_Course>();
+        }
+
         public int Id { get; set; }
         public Nullable<System.DateTime> StartDate { get; set; }
         public Nullable<System.DateTime> EndDate { get; set; }

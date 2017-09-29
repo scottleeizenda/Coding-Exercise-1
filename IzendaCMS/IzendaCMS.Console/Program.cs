@@ -10,7 +10,7 @@ namespace IzendaCMS.ConsoleApp
     {
         static void Main(string[] args)
         {
-            using (var ctx = new IzendaCMSContext())
+            /*using (var ctx = new IzendaCMSContext())
             {
                 var checkCompletionQuery = (from cg in ctx.CourseGrades
                                             join scg in ctx.Student_CourseGrades on cg.Id equals scg.CourseGradesId
@@ -39,19 +39,20 @@ namespace IzendaCMS.ConsoleApp
                 ctx.Entry(s).Collection(reg => reg.Student_Course).Load();
                 ctx.Entry(s).Collection(grades => grades.Student_CourseGrades).Load();
                 Console.WriteLine(Utilities.CalculateGPA(s.Id));
-                Console.WriteLine($"Courses: {s.Student_Course.Count}, Grades: {s.Student_CourseGrades.Count}");
-                try
+                //Console.WriteLine($"Courses: {s.Student_Course.Count}, Grades: {s.Student_CourseGrades.Count}");
+                foreach (Student_CourseGrades scg in s.Student_CourseGrades)
                 {
-                    foreach (Student_CourseGrades scg in s.Student_CourseGrades)
-                    {
-                        Console.WriteLine(scg.CourseGrade.FinalGrade);
-                    }
+                    CourseGrade cg = ctx.CourseGrades.Find(scg.CourseGradesId);
+                    Course c = Utilities.SearchCourseById(null, cg.CourseId);
+                    Console.WriteLine($"{c.CourseName} --> {cg.FinalGrade}");
                 }
-                catch (Exception ex)
+                
+                Course course = ctx.Courses.Find(10001302);
+                foreach (CourseGrade cg in course.CourseGrades)
                 {
-                    Console.WriteLine(ex);
+                    Console.WriteLine(cg.Id);
                 }
-            }
+            }*/
 
             // Set up ID number generation
             using (IzendaCMSContext ctx = new IzendaCMSContext())
